@@ -1,0 +1,55 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --font-gt-america: 'GT America', sans-serif;
+    --font-gt-america-mono: 'GT America Mono', monospace;
+    --font-quadrant: 'Quadrant', serif;
+  }
+}
+
+.font-gt-america {
+  font-family: var(--font-gt-america);
+}
+
+.font-gt-america-mono {
+  font-family: var(--font-gt-america-mono);
+}
+
+.font-quadrant {
+  font-family: var(--font-quadrant);
+}
+
+/* Project type colors */
+.type-architecture {
+  @apply bg-yellow-400;
+}
+
+.type-objects {
+  @apply bg-blue-400;
+}
+
+.type-visual {
+  @apply bg-red-400;
+}
+
+/* Transitions */
+.fade-enter {
+  opacity: 0;
+}
+
+.fade-enter-active {
+  opacity: 1;
+  transition: opacity 300ms ease-in;
+}
+
+.fade-exit {
+  opacity: 1;
+}
+
+.fade-exit-active {
+  opacity: 0;
+  transition: opacity 300ms ease-in;
+} 
