@@ -3,7 +3,7 @@ import localFont from 'next/font/local'
 export const gtAmerica = localFont({
   src: [
     {
-      path: './GT-America-Regular.OTF',
+      path: './GT-America-Regular.otf',
       weight: '400',
       style: 'normal',
     },
@@ -19,7 +19,7 @@ export const gtAmerica = localFont({
 export const gtAmericaMono = localFont({
   src: [
     {
-      path: './GT-America-Mono-Regular.OTF',
+      path: './GT-America-Mono-Regular.otf',
       weight: '400',
       style: 'normal',
     },
