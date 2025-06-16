@@ -3,12 +3,12 @@ import localFont from 'next/font/local'
 export const gtAmerica = localFont({
   src: [
     {
-      path: '../../public/fonts/GTAmerica-Regular.otf',
+      path: '../../public/fonts/GT-America-Regular.OTF',
       weight: '400',
       style: 'normal',
     },
     {
-      path: '../../public/fonts/GTAmerica-Bold.otf',
+      path: '../../public/fonts/GT-America-Bold.otf',
       weight: '700',
       style: 'normal',
     },
@@ -19,7 +19,7 @@ export const gtAmerica = localFont({
 export const gtAmericaMono = localFont({
   src: [
     {
-      path: '../../public/fonts/GTAmericaMono-Regular.otf',
+      path: '../../public/fonts/GT-America-Mono-Regular.OTF',
       weight: '400',
       style: 'normal',
     },
@@ -30,7 +30,7 @@ export const gtAmericaMono = localFont({
 export const quadrant = localFont({
   src: [
     {
-      path: '../../public/fonts/Quadrant-Light.otf',
+      path: '../../public/fonts/QuadrantText-201218-Light.otf',
       weight: '300',
       style: 'normal',
     },
