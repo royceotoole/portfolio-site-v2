@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import type { Project, ProjectType, ProjectRole } from '@/lib/supabase'
@@ -11,7 +11,7 @@ interface Filters {
   year?: number
 }
 
-export default function WorkPage() {
+function WorkContent() {
   const [projects, setProjects] = useState<Project[]>([])
   const [isGridView, setIsGridView] = useState(false)
   const [filters, setFilters] = useState<Filters>({})
@@ -200,5 +200,13 @@ export default function WorkPage() {
         )}
       </main>
     </div>
+  )
+}
+
+export default function WorkPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <WorkContent />
+    </Suspense>
   )
 } 
