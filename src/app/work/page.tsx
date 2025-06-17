@@ -1,9 +1,11 @@
 'use client'
 
-import { useState, useEffect, Suspense } from 'react'
+import { useState, useEffect } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 import type { Project, ProjectType, ProjectRole } from '@/lib/supabase'
+import Image from 'next/image'
 
 interface Filters {
   type?: ProjectType[]
@@ -13,7 +15,7 @@ interface Filters {
 
 function WorkContent() {
   const [projects, setProjects] = useState<Project[]>([])
-  const [isGridView, setIsGridView] = useState(false)
+  const [isGridView, setIsGridView] = useState(true)
   const [filters, setFilters] = useState<Filters>({})
   const searchParams = useSearchParams()
   const router = useRouter()
@@ -68,145 +70,210 @@ function WorkContent() {
   }
 
   return (
-    <div className="flex min-h-screen pt-16">
-      {/* Filters */}
-      <aside className="w-64 p-6 border-r">
-        <h2 className="font-quadrant text-xl mb-6">Filter</h2>
-        
-        <div className="space-y-6">
-          {/* Type Filter */}
-          <div>
-            <h3 className="font-gt-america-mono text-sm mb-2">Type</h3>
-            <div className="space-y-2">
-              {['Architecture', 'Objects', 'Visual'].map((type) => (
-                <label key={type} className="flex items-center space-x-2">
-                  <input
-                    type="checkbox"
-                    checked={filters.type?.includes(type as ProjectType)}
-                    onChange={(e) => {
-                      const newTypes = e.target.checked
-                        ? [...(filters.type || []), type as ProjectType]
-                        : filters.type?.filter((t) => t !== type)
-                      updateFilters({ ...filters, type: newTypes })
-                    }}
-                  />
-                  <span>{type}</span>
-                </label>
-              ))}
+    <div className="min-h-screen">
+      {/* Navigation */}
+      <nav className="fixed top-0 left-0 right-0 flex justify-between items-center p-8 bg-white z-50">
+        <Link 
+          href="/"
+          className="font-gt-america text-lg hover:opacity-75 transition-opacity"
+        >
+          Royce O'Toole
+        </Link>
+        <Link 
+          href="/contact"
+          className="font-gt-america-mono text-sm hover:opacity-75 transition-opacity"
+        >
+          Contact
+        </Link>
+      </nav>
+
+      <div className="pt-24 px-8 flex">
+        {/* Filters Sidebar */}
+        <aside className="w-64 flex-shrink-0">
+          <h1 className="font-quadrant text-4xl mb-8">Work</h1>
+          
+          <div className="mb-8">
+            <div className="flex space-x-2 mb-8">
+              <button
+                onClick={() => setIsGridView(true)}
+                className={`px-4 py-1 font-gt-america-mono text-sm ${isGridView ? 'bg-black text-white' : 'bg-gray-100'}`}
+              >
+                GRID
+              </button>
+              <button
+                onClick={() => setIsGridView(false)}
+                className={`px-4 py-1 font-gt-america-mono text-sm ${!isGridView ? 'bg-black text-white' : 'bg-gray-100'}`}
+              >
+                LIST
+              </button>
             </div>
           </div>
 
-          {/* Role Filter */}
-          <div>
-            <h3 className="font-gt-america-mono text-sm mb-2">Role</h3>
-            <div className="space-y-2">
-              {['Design', 'Build', 'Manage'].map((role) => (
-                <label key={role} className="flex items-center space-x-2">
-                  <input
-                    type="checkbox"
-                    checked={filters.role?.includes(role as ProjectRole)}
-                    onChange={(e) => {
-                      const newRoles = e.target.checked
-                        ? [...(filters.role || []), role as ProjectRole]
-                        : filters.role?.filter((r) => r !== role)
-                      updateFilters({ ...filters, role: newRoles })
-                    }}
-                  />
-                  <span>{role}</span>
-                </label>
-              ))}
+          <div className="space-y-8">
+            {/* Type Filter */}
+            <div>
+              <h3 className="font-gt-america-mono text-sm mb-4">Type</h3>
+              <div className="space-y-2">
+                {[
+                  { name: 'Architecture', count: 5 },
+                  { name: 'Objects', count: 6 },
+                  { name: 'Visual', count: 2 }
+                ].map(({ name, count }) => (
+                  <label key={name} className="flex items-center justify-between group cursor-pointer">
+                    <div className="flex items-center">
+                      <input
+                        type="checkbox"
+                        checked={filters.type?.includes(name as ProjectType)}
+                        onChange={(e) => {
+                          const newTypes = e.target.checked
+                            ? [...(filters.type || []), name as ProjectType]
+                            : filters.type?.filter((t) => t !== name)
+                          updateFilters({ ...filters, type: newTypes })
+                        }}
+                        className="mr-2 cursor-pointer"
+                      />
+                      <span className={`font-gt-america-mono text-sm ${filters.type?.includes(name as ProjectType) ? '' : 'text-gray-400'}`}>
+                        {name}
+                      </span>
+                    </div>
+                    <span className="font-gt-america-mono text-sm text-gray-400">
+                      ({count})
+                    </span>
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            {/* Role Filter */}
+            <div>
+              <h3 className="font-gt-america-mono text-sm mb-4">Role</h3>
+              <div className="space-y-2">
+                {[
+                  { name: 'Design', count: 5 },
+                  { name: 'Build', count: 6 },
+                  { name: 'Manage', count: 2 }
+                ].map(({ name, count }) => (
+                  <label key={name} className="flex items-center justify-between group cursor-pointer">
+                    <div className="flex items-center">
+                      <input
+                        type="checkbox"
+                        checked={filters.role?.includes(name as ProjectRole)}
+                        onChange={(e) => {
+                          const newRoles = e.target.checked
+                            ? [...(filters.role || []), name as ProjectRole]
+                            : filters.role?.filter((r) => r !== name)
+                          updateFilters({ ...filters, role: newRoles })
+                        }}
+                        className="mr-2 cursor-pointer"
+                      />
+                      <span className={`font-gt-america-mono text-sm ${filters.role?.includes(name as ProjectRole) ? '' : 'text-gray-400'}`}>
+                        {name}
+                      </span>
+                    </div>
+                    <span className="font-gt-america-mono text-sm text-gray-400">
+                      ({count})
+                    </span>
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            {/* Year Filter */}
+            <div>
+              <h3 className="font-gt-america-mono text-sm mb-4">Year</h3>
+              <div className="space-y-2">
+                {[2025, 2024, 2023, 2022, 2021, 2020, 2019].map((year) => (
+                  <label key={year} className="flex items-center justify-between group cursor-pointer">
+                    <div className="flex items-center">
+                      <input
+                        type="radio"
+                        name="year"
+                        checked={filters.year === year}
+                        onChange={() => updateFilters({ ...filters, year })}
+                        className="mr-2 cursor-pointer"
+                      />
+                      <span className={`font-gt-america-mono text-sm ${filters.year === year ? '' : 'text-gray-400'}`}>
+                        {year}
+                      </span>
+                    </div>
+                    <span className="font-gt-america-mono text-sm text-gray-400">
+                      ({year === 2025 ? 1 : year === 2024 ? 3 : 2})
+                    </span>
+                  </label>
+                ))}
+              </div>
             </div>
           </div>
+        </aside>
 
-          {/* Year Filter */}
-          <div>
-            <h3 className="font-gt-america-mono text-sm mb-2">Year</h3>
-            <select
-              value={filters.year || ''}
-              onChange={(e) => updateFilters({ ...filters, year: parseInt(e.target.value) || undefined })}
-              className="w-full border p-1"
-            >
-              <option value="">All Years</option>
-              {[2025, 2024, 2023, 2022, 2021, 2020, 2019].map((year) => (
-                <option key={year} value={year}>{year}</option>
+        {/* Projects Grid/List */}
+        <div className="flex-1 pl-8">
+          {isGridView ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {projects.map((project) => (
+                <Link
+                  key={project.id}
+                  href={`/work/${project.slug}`}
+                  className="group relative aspect-[4/3] overflow-hidden bg-gray-100"
+                >
+                  {project.cover && (
+                    <Image
+                      src={project.cover}
+                      alt={project.name}
+                      fill
+                      className="object-cover transition-transform group-hover:scale-105"
+                    />
+                  )}
+                  <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/50 to-transparent p-4">
+                    <h3 className="font-gt-america text-white text-lg">
+                      {project.name}
+                    </h3>
+                    <div className="font-gt-america-mono text-white/75 text-sm">
+                      {project.type[0]}
+                    </div>
+                  </div>
+                </Link>
               ))}
-            </select>
-          </div>
-        </div>
-      </aside>
-
-      {/* Projects List */}
-      <main className="flex-1 p-6">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="font-quadrant text-4xl">Work</h1>
-          <div className="flex space-x-2">
-            <button
-              onClick={() => setIsGridView(false)}
-              className={`px-4 py-1 ${!isGridView ? 'bg-gray-200' : ''}`}
-            >
-              List
-            </button>
-            <button
-              onClick={() => setIsGridView(true)}
-              className={`px-4 py-1 ${isGridView ? 'bg-gray-200' : ''}`}
-            >
-              Grid
-            </button>
-          </div>
-        </div>
-
-        {isGridView ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {projects.map((project) => (
-              <a
-                key={project.id}
-                href={`/work/${project.slug}`}
-                className="group relative aspect-square overflow-hidden"
-              >
-                <img
-                  src={project.cover}
-                  alt={project.name}
-                  className="w-full h-full object-cover transition-transform group-hover:scale-105"
-                />
-                <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-opacity flex items-center justify-center">
-                  <h3 className="text-white opacity-0 group-hover:opacity-100 transition-opacity font-gt-america text-xl">
-                    {project.name}
-                  </h3>
-                </div>
-              </a>
-            ))}
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {projects.map((project) => (
-              <a
-                key={project.id}
-                href={`/work/${project.slug}`}
-                className="block border-t py-4 group"
-              >
-                <div className="flex items-center">
-                  <div className="flex-1">
-                    <h3 className="font-gt-america text-xl group-hover:underline">{project.name}</h3>
-                    <p className="text-gray-600">{project.description_short}</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {projects.map((project) => (
+                <Link
+                  key={project.id}
+                  href={`/work/${project.slug}`}
+                  className="block group"
+                >
+                  <div className="grid grid-cols-[1fr,2fr,1fr,auto] gap-8 items-center py-4 border-t border-gray-200">
+                    <div className="font-gt-america-mono text-sm">
+                      {project.type.join(', ')}
+                    </div>
+                    <div>
+                      <h3 className="font-gt-america text-lg group-hover:opacity-75 transition-opacity">
+                        {project.name}
+                      </h3>
+                      <p className="font-gt-america text-gray-500">
+                        {project.description_short}
+                      </p>
+                    </div>
+                    <div className="font-gt-america-mono text-sm">
+                      {project.role.join(', ')}
+                    </div>
+                    <div className="font-gt-america-mono text-sm">
+                      {project.year}
+                    </div>
                   </div>
-                  <div className="text-right">
-                    <div className="font-gt-america-mono">{project.role.join(', ')}</div>
-                    <div className="text-gray-600">{project.year}</div>
-                  </div>
-                </div>
-              </a>
-            ))}
-          </div>
-        )}
-      </main>
+                </Link>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   )
 }
 
 export default function WorkPage() {
   return (
-    <Suspense fallback={<div>Loading...</div>}>
-      <WorkContent />
-    </Suspense>
+    <WorkContent />
   )
 } 

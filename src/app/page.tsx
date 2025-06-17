@@ -33,7 +33,7 @@ export default function Home() {
 
     const interval = setInterval(() => {
       setCurrentMediaIndex((prev) => (prev + 1) % media.length)
-    }, 1500)
+    }, 3000) // Slower transition
 
     return () => clearInterval(interval)
   }, [media])
@@ -54,32 +54,54 @@ export default function Home() {
   }
 
   return (
-    <main className="h-screen w-screen relative overflow-hidden">
+    <main className="h-screen w-screen relative overflow-hidden bg-white">
+      {/* Navigation */}
+      <nav className="absolute top-0 left-0 right-0 flex justify-between items-center p-8 z-20">
+        <Link 
+          href="/"
+          className="font-gt-america text-lg hover:opacity-75 transition-opacity"
+        >
+          Royce O'Toole
+        </Link>
+        <Link 
+          href="/contact"
+          className="font-gt-america-mono text-sm hover:opacity-75 transition-opacity"
+        >
+          Contact
+        </Link>
+      </nav>
+
+      {/* Screensaver background */}
       <AnimatePresence mode="wait">
         <motion.div
           key={currentMediaIndex}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: 0.5 }}
+          transition={{ duration: 1.5 }} // Slower fade
           className="absolute inset-0"
         >
-          <Image
-            src={media[currentMediaIndex]}
-            alt="Screensaver"
-            fill
-            className="object-cover"
-            priority
-          />
+          {media[currentMediaIndex] && (
+            <Image
+              src={media[currentMediaIndex]}
+              alt="Screensaver"
+              fill
+              className="object-cover"
+              priority
+            />
+          )}
         </motion.div>
       </AnimatePresence>
       
-      <Link
-        href="/work"
-        className="absolute inset-0 flex items-center justify-center text-white text-2xl font-quadrant hover:opacity-75 transition-opacity z-10"
-      >
-        Enter
-      </Link>
+      {/* Subtle Enter text */}
+      <div className="absolute inset-0 flex items-center justify-center z-10">
+        <Link
+          href="/work"
+          className="font-gt-america text-white text-lg opacity-75 hover:opacity-100 transition-opacity cursor-pointer mix-blend-difference"
+        >
+          Enter
+        </Link>
+      </div>
     </main>
   )
 } 
