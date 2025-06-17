@@ -62,19 +62,21 @@ export default function Home() {
   return (
     <main className="min-h-screen w-full relative bg-white">
       {/* Header */}
-      <header className="absolute top-0 left-0 right-0 flex justify-between items-center p-8 z-20">
-        <Link 
-          href="/"
-          className="font-gt-america text-lg text-black hover:opacity-75 transition-opacity"
-        >
-          Royce O'Toole
-        </Link>
-        <Link 
-          href="/contact"
-          className="font-gt-america-mono text-sm text-black hover:opacity-75 transition-opacity"
-        >
-          Contact
-        </Link>
+      <header className="absolute top-0 left-0 right-0 z-20">
+        <div className="flex justify-between items-center p-8">
+          <Link 
+            href="/"
+            className="font-gt-america text-lg text-black hover:opacity-75 transition-opacity no-underline"
+          >
+            Royce O'Toole
+          </Link>
+          <Link 
+            href="/contact"
+            className="font-gt-america-mono text-sm text-black hover:opacity-75 transition-opacity no-underline"
+          >
+            Contact
+          </Link>
+        </div>
       </header>
 
       {/* Screensaver Images */}
@@ -88,7 +90,7 @@ export default function Home() {
             transition={{ duration: 1 }}
             className="absolute inset-0"
           >
-            {media[currentMediaIndex] && (
+            {media[currentMediaIndex] ? (
               <Image
                 src={media[currentMediaIndex]}
                 alt="Screensaver"
@@ -97,6 +99,9 @@ export default function Home() {
                 priority
                 quality={95}
               />
+            ) : (
+              // Fallback background
+              <div className="absolute inset-0 bg-gray-100" />
             )}
           </motion.div>
         </AnimatePresence>
@@ -105,7 +110,7 @@ export default function Home() {
       {/* Enter Link */}
       <Link
         href="/work"
-        className="absolute inset-0 flex items-center justify-center z-10 cursor-pointer group"
+        className="absolute inset-0 flex items-center justify-center z-10 cursor-pointer group no-underline"
       >
         <span className="font-gt-america text-lg text-black mix-blend-difference group-hover:opacity-75 transition-opacity">
           Enter

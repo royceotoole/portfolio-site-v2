@@ -8,6 +8,12 @@
     --font-gt-america-mono: 'GT America Mono', monospace;
     --font-quadrant: 'Quadrant', serif;
   }
+
+  /* Remove default link styling */
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
 }
 
 .font-gt-america {
