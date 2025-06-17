@@ -1,17 +1,43 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
 import type { ProjectType, ProjectRole } from '@/lib/supabase'
 
 export default function AdminPage() {
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+
+  useEffect(() => {
+    checkAuth()
+  }, [])
+
+  const checkAuth = async () => {
+    const { data: { session } } = await supabase.auth.getSession()
+    setIsAuthenticated(!!session)
+  }
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault()
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password
+    })
+    if (error) {
+      alert('Error logging in: ' + error.message)
+    } else {
+      setIsAuthenticated(true)
+    }
+  }
+
   const [projectData, setProjectData] = useState({
     slug: '',
     name: '',
     year: new Date().getFullYear(),
     company: 'Take Place',
-    type: ['Architecture'],
-    role: ['Design'],
+    type: ['Architecture'] as ProjectType[],
+    role: ['Design'] as ProjectRole[],
     description_short: '',
     description_long: '',
     media: [''] as string[],
@@ -109,9 +135,56 @@ export default function AdminPage() {
     return url.match(/\.(mp4|webm|ogg)$/i) != null
   }
 
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen p-8">
+        <h1 className="text-3xl font-bold mb-8">Admin Login</h1>
+        <form onSubmit={handleLogin} className="max-w-md space-y-4">
+          <div>
+            <label className="block mb-2">Email</label>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full border p-2"
+              required
+            />
+          </div>
+          <div>
+            <label className="block mb-2">Password</label>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="w-full border p-2"
+              required
+            />
+          </div>
+          <button
+            type="submit"
+            className="bg-blue-500 text-white px-6 py-2 rounded hover:bg-blue-600"
+          >
+            Login
+          </button>
+        </form>
+      </div>
+    )
+  }
+
   return (
     <div className="min-h-screen p-8">
-      <h1 className="text-3xl font-bold mb-8">Admin Dashboard</h1>
+      <div className="flex justify-between items-center mb-8">
+        <h1 className="text-3xl font-bold">Admin Dashboard</h1>
+        <button
+          onClick={() => {
+            supabase.auth.signOut()
+            setIsAuthenticated(false)
+          }}
+          className="bg-gray-200 px-4 py-2 rounded hover:bg-gray-300"
+        >
+          Logout
+        </button>
+      </div>
       
       <div className="max-w-2xl">
         <h2 className="text-xl font-semibold mb-4">Add New Project</h2>
@@ -158,13 +231,15 @@ export default function AdminPage() {
                             : 'bg-gray-200'
                         }`}
                       >
-                        Set as Cover
+                        {projectData.cover === url ? 'Cover ✓' : 'Set as Cover'}
                       </button>
                     </div>
                   </div>
                   
                   {url && isValidUrl(url) && (
-                    <div className="relative w-full h-40 bg-gray-100 rounded overflow-hidden">
+                    <div className={`relative w-[500px] h-[300px] bg-gray-100 rounded overflow-hidden ${
+                      projectData.cover === url ? 'ring-2 ring-blue-500' : ''
+                    }`}>
                       {isImageUrl(url) ? (
                         <img
                           src={url}
@@ -186,6 +261,11 @@ export default function AdminPage() {
                       ) : (
                         <div className="absolute inset-0 flex items-center justify-center text-gray-500">
                           Unsupported media type
+                        </div>
+                      )}
+                      {projectData.cover === url && (
+                        <div className="absolute top-2 right-2 bg-blue-500 text-white px-2 py-1 rounded-full text-sm">
+                          Cover Image
                         </div>
                       )}
                     </div>
@@ -252,20 +332,13 @@ export default function AdminPage() {
               {['Architecture', 'Objects', 'Visual'].map((type) => (
                 <label key={type} className="flex items-center">
                   <input
-                    type="checkbox"
-                    checked={projectData.type.includes(type as ProjectType)}
-                    onChange={(e) => {
-                      if (e.target.checked) {
-                        setProjectData(prev => ({
-                          ...prev,
-                          type: [...prev.type, type as ProjectType]
-                        }))
-                      } else {
-                        setProjectData(prev => ({
-                          ...prev,
-                          type: prev.type.filter(t => t !== type)
-                        }))
-                      }
+                    type="radio"
+                    checked={projectData.type[0] === type}
+                    onChange={() => {
+                      setProjectData(prev => ({
+                        ...prev,
+                        type: [type as ProjectType]
+                      }))
                     }}
                     className="mr-2"
                   />
