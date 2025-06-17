@@ -1,15 +1,24 @@
 import { createClient } from '@supabase/supabase-js'
 
-const supabaseUrl = 'https://cmyyujlqxxiqgrnjaqqk.supabase.co'
-const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNteXl1amxxeHhpcWdybmphcXFrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAxMDAwMzMsImV4cCI6MjA2NTY3NjAzM30.MDh4s52iPR3cYXJ2Icm_DCbLV8zV8OIxHEzkb71ZHh0'
-// Add your service role key here - get it from Supabase dashboard > Settings > API
-const supabaseServiceRoleKey = process.env.NEXT_PUBLIC_SUPABASE_SERVICE_ROLE_KEY || ''
+if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
+  throw new Error('Missing environment variable NEXT_PUBLIC_SUPABASE_URL')
+}
+
+if (!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+  throw new Error('Missing environment variable NEXT_PUBLIC_SUPABASE_ANON_KEY')
+}
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+const supabaseServiceRoleKey = process.env.NEXT_PUBLIC_SUPABASE_SERVICE_ROLE_KEY
 
 // Regular client for public operations
 export const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
-// Admin client with elevated privileges
-export const adminSupabase = createClient(supabaseUrl, supabaseServiceRoleKey)
+// Admin client with elevated privileges (only created if service role key is available)
+export const adminSupabase = supabaseServiceRoleKey 
+  ? createClient(supabaseUrl, supabaseServiceRoleKey)
+  : supabase
 
 export type ProjectType = 'Architecture' | 'Objects' | 'Visual'
 export type ProjectRole = 'Design' | 'Build' | 'Manage'
