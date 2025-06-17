@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
@@ -274,6 +274,38 @@ function WorkContent() {
 
 export default function WorkPage() {
   return (
-    <WorkContent />
+    <Suspense fallback={
+      <div className="min-h-screen">
+        {/* Navigation */}
+        <nav className="fixed top-0 left-0 right-0 flex justify-between items-center p-8 bg-white z-50">
+          <Link 
+            href="/"
+            className="font-gt-america text-lg hover:opacity-75 transition-opacity"
+          >
+            Royce O'Toole
+          </Link>
+          <Link 
+            href="/contact"
+            className="font-gt-america-mono text-sm hover:opacity-75 transition-opacity"
+          >
+            Contact
+          </Link>
+        </nav>
+        <div className="pt-24 px-8 flex">
+          <div className="w-64 flex-shrink-0">
+            <h1 className="font-quadrant text-4xl mb-8">Work</h1>
+          </div>
+          <div className="flex-1 pl-8">
+            <div className="animate-pulse space-y-4">
+              {[...Array(6)].map((_, i) => (
+                <div key={i} className="h-48 bg-gray-100 rounded"></div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    }>
+      <WorkContent />
+    </Suspense>
   )
 } 
