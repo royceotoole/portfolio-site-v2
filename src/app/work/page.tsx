@@ -130,20 +130,20 @@ function WorkContent() {
   }
 
   return (
-    <div className="min-h-screen bg-white font-bold text-red-500">
+    <div className="min-h-screen bg-white !font-bold !text-red-500">
       {/* Header */}
       <header className="fixed top-0 left-0 right-0 z-40 border-b border-gray-200">
         <div className="max-w-screen-2xl mx-auto px-16">
           <div className="flex justify-between items-center py-4">
             <Link 
               href="/"
-              className="font-gt-america text-sm hover:opacity-75 transition-opacity font-bold text-red-500"
+              className="!font-gt-america !text-sm hover:opacity-75 transition-opacity !font-bold !text-red-500"
             >
               Royce O'Toole
             </Link>
             <Link 
               href="/contact"
-              className="font-gt-america text-sm hover:opacity-75 transition-opacity font-bold text-red-500"
+              className="!font-gt-america !text-sm hover:opacity-75 transition-opacity !font-bold !text-red-500"
             >
               Contact
             </Link>
@@ -151,9 +151,9 @@ function WorkContent() {
         </div>
       </header>
 
-      <div className="max-w-screen-2xl mx-auto px-16">
+      <main className="max-w-screen-2xl mx-auto px-16">
         <div className="pt-20">
-          <h1 className="font-quadrant text-4xl mb-8 font-bold text-red-500">Work</h1>
+          <h1 className="!font-quadrant !text-4xl mb-8 !font-bold !text-red-500">Work</h1>
 
           <div className="flex gap-32">
             {/* Filters Sidebar */}
@@ -332,7 +332,7 @@ function WorkContent() {
             </div>
           </div>
         </div>
-      </div>
+      </main>
 
       {/* Project Preview Modal */}
       <AnimatePresence>
