@@ -3,9 +3,10 @@
 import { useState, useEffect, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
+import Image from 'next/image'
+import { motion, AnimatePresence } from 'framer-motion'
 import { supabase } from '@/lib/supabase'
 import type { Project, ProjectType, ProjectRole } from '@/lib/supabase'
-import Image from 'next/image'
 
 interface Filters {
   type?: ProjectType[]
@@ -13,12 +14,76 @@ interface Filters {
   year?: number
 }
 
+function ProjectPreview({ project, onClose }: { project: Project; onClose: () => void }) {
+  const [currentMediaIndex, setCurrentMediaIndex] = useState(0)
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentMediaIndex((prev) => (prev + 1) % project.media.length)
+    }, 2000)
+    return () => clearInterval(interval)
+  }, [project.media])
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: 20 }}
+      className="fixed inset-0 z-50 flex items-center justify-center p-8 bg-black/50"
+      onClick={onClose}
+    >
+      <div 
+        className="bg-white rounded-lg shadow-xl overflow-hidden max-w-3xl w-full"
+        onClick={e => e.stopPropagation()}
+      >
+        <div className="relative aspect-video">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={currentMediaIndex}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-0"
+            >
+              <Image
+                src={project.media[currentMediaIndex]}
+                alt={project.name}
+                fill
+                className="object-cover"
+              />
+            </motion.div>
+          </AnimatePresence>
+        </div>
+        <div className="p-6">
+          <h3 className="font-gt-america text-xl mb-2">{project.name}</h3>
+          <p className="font-gt-america text-gray-600">{project.description_short}</p>
+        </div>
+      </div>
+    </motion.div>
+  )
+}
+
 function WorkContent() {
   const [projects, setProjects] = useState<Project[]>([])
-  const [isGridView, setIsGridView] = useState(true)
+  const [isGridView, setIsGridView] = useState(false)
   const [filters, setFilters] = useState<Filters>({})
+  const [previewProject, setPreviewProject] = useState<Project | null>(null)
   const searchParams = useSearchParams()
   const router = useRouter()
+
+  // Check if we're on mobile
+  const [isMobile, setIsMobile] = useState(false)
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768)
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    return () => window.removeEventListener('resize', checkMobile)
+  }, [])
+
+  // Force grid view on mobile
+  useEffect(() => {
+    if (isMobile) setIsGridView(true)
+  }, [isMobile])
 
   useEffect(() => {
     const fetchProjects = async () => {
@@ -36,7 +101,7 @@ function WorkContent() {
 
       const { data } = await query
       if (data) {
-        setProjects(data)
+        setProjects(data.filter(p => p.slug !== 'screensaver'))
       }
     }
 
@@ -70,9 +135,9 @@ function WorkContent() {
   }
 
   return (
-    <div className="min-h-screen">
-      {/* Navigation */}
-      <nav className="fixed top-0 left-0 right-0 flex justify-between items-center p-8 bg-white z-50">
+    <div className="min-h-screen bg-white">
+      {/* Header */}
+      <header className="fixed top-0 left-0 right-0 flex justify-between items-center p-8 bg-white z-40 border-b">
         <Link 
           href="/"
           className="font-gt-america text-lg hover:opacity-75 transition-opacity"
@@ -85,28 +150,29 @@ function WorkContent() {
         >
           Contact
         </Link>
-      </nav>
+      </header>
 
-      <div className="pt-24 px-8 flex">
+      <div className="pt-24 px-8 flex flex-col md:flex-row">
         {/* Filters Sidebar */}
-        <aside className="w-64 flex-shrink-0">
-          <h1 className="font-quadrant text-4xl mb-8">Work</h1>
-          
-          <div className="mb-8">
-            <div className="flex space-x-2 mb-8">
-              <button
-                onClick={() => setIsGridView(true)}
-                className={`px-4 py-1 font-gt-america-mono text-sm ${isGridView ? 'bg-black text-white' : 'bg-gray-100'}`}
-              >
-                GRID
-              </button>
-              <button
-                onClick={() => setIsGridView(false)}
-                className={`px-4 py-1 font-gt-america-mono text-sm ${!isGridView ? 'bg-black text-white' : 'bg-gray-100'}`}
-              >
-                LIST
-              </button>
-            </div>
+        <aside className={`${isMobile ? 'mb-8' : 'w-64 flex-shrink-0'}`}>
+          <div className="flex justify-between items-center mb-8">
+            <h1 className="font-quadrant text-4xl">Work</h1>
+            {!isMobile && (
+              <div className="flex space-x-2">
+                <button
+                  onClick={() => setIsGridView(true)}
+                  className={`px-4 py-1 font-gt-america-mono text-sm ${isGridView ? 'bg-black text-white' : 'bg-gray-100'}`}
+                >
+                  GRID
+                </button>
+                <button
+                  onClick={() => setIsGridView(false)}
+                  className={`px-4 py-1 font-gt-america-mono text-sm ${!isGridView ? 'bg-black text-white' : 'bg-gray-100'}`}
+                >
+                  LIST
+                </button>
+              </div>
+            )}
           </div>
 
           <div className="space-y-8">
@@ -207,7 +273,7 @@ function WorkContent() {
         </aside>
 
         {/* Projects Grid/List */}
-        <div className="flex-1 pl-8">
+        <div className={`${isMobile ? '' : 'flex-1 pl-8'}`}>
           {isGridView ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {projects.map((project) => (
@@ -215,6 +281,8 @@ function WorkContent() {
                   key={project.id}
                   href={`/work/${project.slug}`}
                   className="group relative aspect-[4/3] overflow-hidden bg-gray-100"
+                  onMouseEnter={() => setPreviewProject(project)}
+                  onMouseLeave={() => setPreviewProject(null)}
                 >
                   {project.cover && (
                     <Image
@@ -236,14 +304,16 @@ function WorkContent() {
               ))}
             </div>
           ) : (
-            <div className="space-y-4">
+            <div className="divide-y">
               {projects.map((project) => (
                 <Link
                   key={project.id}
                   href={`/work/${project.slug}`}
-                  className="block group"
+                  className="block group py-4"
+                  onMouseEnter={() => setPreviewProject(project)}
+                  onMouseLeave={() => setPreviewProject(null)}
                 >
-                  <div className="grid grid-cols-[1fr,2fr,1fr,auto] gap-8 items-center py-4 border-t border-gray-200">
+                  <div className="grid grid-cols-[1fr,2fr,1fr,auto] gap-8 items-center">
                     <div className="font-gt-america-mono text-sm">
                       {project.type.join(', ')}
                     </div>
@@ -268,6 +338,16 @@ function WorkContent() {
           )}
         </div>
       </div>
+
+      {/* Project Preview Modal */}
+      <AnimatePresence>
+        {previewProject && (
+          <ProjectPreview 
+            project={previewProject} 
+            onClose={() => setPreviewProject(null)} 
+          />
+        )}
+      </AnimatePresence>
     </div>
   )
 }
@@ -275,22 +355,11 @@ function WorkContent() {
 export default function WorkPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen">
-        {/* Navigation */}
-        <nav className="fixed top-0 left-0 right-0 flex justify-between items-center p-8 bg-white z-50">
-          <Link 
-            href="/"
-            className="font-gt-america text-lg hover:opacity-75 transition-opacity"
-          >
-            Royce O'Toole
-          </Link>
-          <Link 
-            href="/contact"
-            className="font-gt-america-mono text-sm hover:opacity-75 transition-opacity"
-          >
-            Contact
-          </Link>
-        </nav>
+      <div className="min-h-screen bg-white">
+        <header className="fixed top-0 left-0 right-0 flex justify-between items-center p-8 bg-white z-40 border-b">
+          <div className="font-gt-america text-lg">Royce O'Toole</div>
+          <div className="font-gt-america-mono text-sm">Contact</div>
+        </header>
         <div className="pt-24 px-8 flex">
           <div className="w-64 flex-shrink-0">
             <h1 className="font-quadrant text-4xl mb-8">Work</h1>
@@ -298,7 +367,7 @@ export default function WorkPage() {
           <div className="flex-1 pl-8">
             <div className="animate-pulse space-y-4">
               {[...Array(6)].map((_, i) => (
-                <div key={i} className="h-48 bg-gray-100 rounded"></div>
+                <div key={i} className="h-16 bg-gray-100 rounded"></div>
               ))}
             </div>
           </div>

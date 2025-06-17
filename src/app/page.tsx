@@ -21,6 +21,12 @@ export default function Home() {
 
       if (data?.media) {
         setMedia(data.media)
+      } else {
+        // Fallback images if no screensaver data
+        setMedia([
+          '/media/placeholder1.jpg',
+          '/media/placeholder2.jpg'
+        ])
       }
       setIsLoading(false)
     }
@@ -33,13 +39,13 @@ export default function Home() {
 
     const interval = setInterval(() => {
       setCurrentMediaIndex((prev) => (prev + 1) % media.length)
-    }, 3000) // Slower transition
+    }, 3000)
 
     return () => clearInterval(interval)
   }, [media])
 
   const handleKeyPress = (e: KeyboardEvent) => {
-    if (e.key === 'Escape') {
+    if (e.key === 'Enter') {
       window.location.href = '/work'
     }
   }
@@ -54,54 +60,57 @@ export default function Home() {
   }
 
   return (
-    <main className="h-screen w-screen relative overflow-hidden bg-white">
-      {/* Navigation */}
-      <nav className="absolute top-0 left-0 right-0 flex justify-between items-center p-8 z-20">
+    <main className="min-h-screen w-full relative bg-white">
+      {/* Header */}
+      <header className="absolute top-0 left-0 right-0 flex justify-between items-center p-8 z-20">
         <Link 
           href="/"
-          className="font-gt-america text-lg hover:opacity-75 transition-opacity"
+          className="font-gt-america text-lg text-black hover:opacity-75 transition-opacity"
         >
           Royce O'Toole
         </Link>
         <Link 
           href="/contact"
-          className="font-gt-america-mono text-sm hover:opacity-75 transition-opacity"
+          className="font-gt-america-mono text-sm text-black hover:opacity-75 transition-opacity"
         >
           Contact
         </Link>
-      </nav>
+      </header>
 
-      {/* Screensaver background */}
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={currentMediaIndex}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 1.5 }} // Slower fade
-          className="absolute inset-0"
-        >
-          {media[currentMediaIndex] && (
-            <Image
-              src={media[currentMediaIndex]}
-              alt="Screensaver"
-              fill
-              className="object-cover"
-              priority
-            />
-          )}
-        </motion.div>
-      </AnimatePresence>
-      
-      {/* Subtle Enter text */}
-      <div className="absolute inset-0 flex items-center justify-center z-10">
-        <Link
-          href="/work"
-          className="font-gt-america text-white text-lg opacity-75 hover:opacity-100 transition-opacity cursor-pointer mix-blend-difference"
-        >
-          Enter
-        </Link>
+      {/* Screensaver Images */}
+      <div className="h-screen w-full relative overflow-hidden">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={currentMediaIndex}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 1 }}
+            className="absolute inset-0"
+          >
+            {media[currentMediaIndex] && (
+              <Image
+                src={media[currentMediaIndex]}
+                alt="Screensaver"
+                fill
+                className="object-cover"
+                priority
+                quality={95}
+              />
+            )}
+          </motion.div>
+        </AnimatePresence>
       </div>
+
+      {/* Enter Link */}
+      <Link
+        href="/work"
+        className="absolute inset-0 flex items-center justify-center z-10 cursor-pointer group"
+      >
+        <span className="font-gt-america text-lg text-black mix-blend-difference group-hover:opacity-75 transition-opacity">
+          Enter
+        </span>
+      </Link>
     </main>
   )
 } 
