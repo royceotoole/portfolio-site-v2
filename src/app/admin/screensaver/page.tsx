@@ -52,19 +52,11 @@ export default function ScreensaverPage() {
     // Update the screensaver project with new image
     const { error } = await supabase
       .from('projects')
-      .upsert({
-        slug: 'screensaver',
-        name: 'Screensaver',
-        year: new Date().getFullYear(),
-        company: 'Take Place',
-        type: ['Architecture'],
-        role: ['Design'],
-        description_short: 'Landing page screensaver images',
-        description_long: 'A collection of images used for the landing page screensaver.',
+      .update({
         media: [...images, newImageUrl],
-        cover: images[0] || newImageUrl || '',
-        importance: 1
+        cover: images[0] || newImageUrl || ''
       })
+      .eq('slug', 'screensaver')
 
     if (error) {
       console.error('Error updating screensaver project:', error)
