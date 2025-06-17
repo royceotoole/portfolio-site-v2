@@ -130,20 +130,20 @@ function WorkContent() {
   }
 
   return (
-    <div className="min-h-screen bg-white !font-bold !text-red-500">
+    <div className="min-h-screen bg-white">
       {/* Header */}
       <header className="fixed top-0 left-0 right-0 z-40 border-b border-gray-200">
         <div className="max-w-screen-2xl mx-auto px-16">
           <div className="flex justify-between items-center py-4">
             <Link 
               href="/"
-              className="!font-gt-america !text-sm hover:opacity-75 transition-opacity !font-bold !text-red-500"
+              className="font-gt-america text-sm hover:opacity-75 transition-opacity"
             >
               Royce O'Toole
             </Link>
             <Link 
               href="/contact"
-              className="!font-gt-america !text-sm hover:opacity-75 transition-opacity !font-bold !text-red-500"
+              className="font-gt-america text-sm hover:opacity-75 transition-opacity"
             >
               Contact
             </Link>
@@ -153,7 +153,7 @@ function WorkContent() {
 
       <main className="max-w-screen-2xl mx-auto px-16">
         <div className="pt-20">
-          <h1 className="!font-quadrant !text-4xl mb-8 !font-bold !text-red-500">Work</h1>
+          <h1 className="font-quadrant text-4xl mb-8">Work</h1>
 
           <div className="flex gap-32">
             {/* Filters Sidebar */}
@@ -162,13 +162,13 @@ function WorkContent() {
                 <div className="bg-gray-100 inline-flex text-xs font-gt-america-mono">
                   <button
                     onClick={() => setIsGridView(true)}
-                    className={`px-4 py-1 font-bold text-red-500 ${isGridView ? 'bg-white' : ''}`}
+                    className={`px-4 py-1 ${isGridView ? 'bg-white' : ''}`}
                   >
                     GRID
                   </button>
                   <button
                     onClick={() => setIsGridView(false)}
-                    className={`px-4 py-1 font-bold text-red-500 ${!isGridView ? 'bg-white' : ''}`}
+                    className={`px-4 py-1 ${!isGridView ? 'bg-white' : ''}`}
                   >
                     LIST
                   </button>
@@ -176,11 +176,11 @@ function WorkContent() {
               </div>
 
               <div className="space-y-8">
-                <div className="font-gt-america-mono text-xs font-bold text-red-500">FILTER</div>
+                <div className="font-gt-america-mono text-xs">FILTER</div>
 
                 {/* Type Filter */}
                 <div>
-                  <h3 className="font-gt-america-mono text-xs mb-3 font-bold text-red-500">Type</h3>
+                  <h3 className="font-gt-america-mono text-xs mb-3">Type</h3>
                   <div className="space-y-2">
                     {[
                       { name: 'Architecture', count: 5 },
@@ -201,11 +201,11 @@ function WorkContent() {
                             }}
                             className="hidden"
                           />
-                          <span className={`font-gt-america-mono text-xs font-bold ${filters.type?.includes(name as ProjectType) ? 'text-red-500' : 'text-red-500/30'}`}>
+                          <span className={`font-gt-america-mono text-xs ${filters.type?.includes(name as ProjectType) ? 'opacity-100' : 'opacity-30'}`}>
                             {name}
                           </span>
                         </div>
-                        <span className={`font-gt-america-mono text-xs font-bold ${filters.type?.includes(name as ProjectType) ? 'text-red-500' : 'text-red-500/30'}`}>
+                        <span className={`font-gt-america-mono text-xs ${filters.type?.includes(name as ProjectType) ? 'opacity-100' : 'opacity-30'}`}>
                           ({count})
                         </span>
                       </label>
@@ -215,7 +215,7 @@ function WorkContent() {
 
                 {/* Role Filter */}
                 <div>
-                  <h3 className="font-gt-america-mono text-xs mb-3 font-bold text-red-500">Role</h3>
+                  <h3 className="font-gt-america-mono text-xs mb-3">Role</h3>
                   <div className="space-y-2">
                     {[
                       { name: 'Design', count: 5 },
@@ -235,11 +235,11 @@ function WorkContent() {
                             }}
                             className="hidden"
                           />
-                          <span className={`font-gt-america-mono text-xs font-bold ${filters.role?.includes(name as ProjectRole) ? 'text-red-500' : 'text-red-500/30'}`}>
+                          <span className={`font-gt-america-mono text-xs ${filters.role?.includes(name as ProjectRole) ? 'opacity-100' : 'opacity-30'}`}>
                             {name}
                           </span>
                         </div>
-                        <span className={`font-gt-america-mono text-xs font-bold ${filters.role?.includes(name as ProjectRole) ? 'text-red-500' : 'text-red-500/30'}`}>
+                        <span className={`font-gt-america-mono text-xs ${filters.role?.includes(name as ProjectRole) ? 'opacity-100' : 'opacity-30'}`}>
                           ({count})
                         </span>
                       </label>
@@ -249,7 +249,7 @@ function WorkContent() {
 
                 {/* Year Filter */}
                 <div>
-                  <h3 className="font-gt-america-mono text-xs mb-3 font-bold text-red-500">Year</h3>
+                  <h3 className="font-gt-america-mono text-xs mb-3">Year</h3>
                   <div className="space-y-2">
                     {[2025, 2024, 2023, 2022, 2021, 2020, 2019].map((year) => (
                       <label key={year} className="flex items-center justify-between group cursor-pointer">
@@ -261,11 +261,11 @@ function WorkContent() {
                             onChange={() => updateFilters({ ...filters, year })}
                             className="hidden"
                           />
-                          <span className={`font-gt-america-mono text-xs font-bold ${filters.year === year ? 'text-red-500' : 'text-red-500/30'}`}>
+                          <span className={`font-gt-america-mono text-xs ${filters.year === year ? 'opacity-100' : 'opacity-30'}`}>
                             {year}
                           </span>
                         </div>
-                        <span className={`font-gt-america-mono text-xs font-bold ${filters.year === year ? 'text-red-500' : 'text-red-500/30'}`}>
+                        <span className={`font-gt-america-mono text-xs ${filters.year === year ? 'opacity-100' : 'opacity-30'}`}>
                           ({year === 2025 ? 1 : year === 2024 ? 3 : 2})
                         </span>
                       </label>
@@ -299,11 +299,11 @@ function WorkContent() {
               ) : (
                 <div className="space-y-4">
                   <div className="grid grid-cols-[1fr,2fr,2fr,1fr,auto] gap-8 pb-2 border-b border-gray-200">
-                    <div className="font-gt-america-mono text-xs font-bold text-red-500/30">PROJECT</div>
-                    <div className="font-gt-america-mono text-xs font-bold text-red-500/30">DESCRIPTION</div>
+                    <div className="font-gt-america-mono text-xs opacity-30">PROJECT</div>
+                    <div className="font-gt-america-mono text-xs opacity-30">DESCRIPTION</div>
                     <div />
-                    <div className="font-gt-america-mono text-xs font-bold text-red-500/30">ROLE</div>
-                    <div className="font-gt-america-mono text-xs font-bold text-red-500/30">YEAR</div>
+                    <div className="font-gt-america-mono text-xs opacity-30">ROLE</div>
+                    <div className="font-gt-america-mono text-xs opacity-30">YEAR</div>
                   </div>
                   {projects.map((project) => (
                     <Link
@@ -313,16 +313,16 @@ function WorkContent() {
                     >
                       <div className="flex items-center gap-2">
                         <div className={`w-2 h-2 ${getTypeColor(project.type[0])}`} />
-                        <span className="font-gt-america text-sm font-bold text-red-500">{project.name}</span>
+                        <span className="font-gt-america text-sm">{project.name}</span>
                       </div>
-                      <div className="font-gt-america text-sm font-bold text-red-500">
+                      <div className="font-gt-america text-sm">
                         {project.description_short}
                       </div>
                       <div />
-                      <div className="font-gt-america-mono text-xs font-bold text-red-500">
+                      <div className="font-gt-america-mono text-xs">
                         {project.role.join(', ')}
                       </div>
-                      <div className="font-gt-america-mono text-xs font-bold text-red-500">
+                      <div className="font-gt-america-mono text-xs">
                         {project.year}
                       </div>
                     </Link>
