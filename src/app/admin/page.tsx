@@ -186,7 +186,7 @@ export default function AdminPage() {
         </button>
       </div>
       
-      <div className="max-w-2xl">
+      <div className="max-w-3xl mx-auto">
         <h2 className="text-xl font-semibold mb-4">Add New Project</h2>
         
         <form onSubmit={handleSubmit} className="space-y-6">
@@ -195,13 +195,13 @@ export default function AdminPage() {
             <div className="space-y-4">
               {projectData.media.map((url, index) => (
                 <div key={index} className="space-y-2">
-                  <div className="flex gap-2">
+                  <div className="flex gap-2 flex-wrap">
                     <input
                       type="url"
                       value={url}
                       onChange={(e) => handleMediaChange(index, e.target.value)}
                       placeholder="https://..."
-                      className="flex-1 border p-2"
+                      className="flex-1 min-w-[200px] border p-2"
                     />
                     <div className="flex gap-1">
                       {index > 0 && index < projectData.media.length - 1 && (
@@ -225,7 +225,7 @@ export default function AdminPage() {
                       <button
                         type="button"
                         onClick={() => setProjectData(prev => ({ ...prev, cover: url }))}
-                        className={`px-3 py-1 rounded ${
+                        className={`px-3 py-1 rounded whitespace-nowrap ${
                           projectData.cover === url 
                             ? 'bg-blue-500 text-white' 
                             : 'bg-gray-200'
@@ -237,7 +237,7 @@ export default function AdminPage() {
                   </div>
                   
                   {url && isValidUrl(url) && (
-                    <div className={`relative w-[300px] h-[200px] bg-gray-100 rounded overflow-hidden ${
+                    <div className={`relative w-[200px] h-[150px] bg-gray-100 rounded overflow-hidden ${
                       projectData.cover === url ? 'ring-2 ring-blue-500' : ''
                     }`}>
                       {isImageUrl(url) ? (
