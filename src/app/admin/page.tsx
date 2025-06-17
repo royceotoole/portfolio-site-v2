@@ -10,11 +10,11 @@ export default function AdminPage() {
     name: '',
     year: new Date().getFullYear(),
     company: 'Take Place',
-    type: ['Architecture'] as ProjectType[],
-    role: ['Design'] as ProjectRole[],
+    type: ['Architecture'],
+    role: ['Design'],
     description_short: '',
     description_long: '',
-    media: [''] as string[],  // Start with one empty URL field
+    media: [''] as string[],
     cover: '',
     importance: 1
   })
@@ -22,78 +22,91 @@ export default function AdminPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
-    try {
-      // Filter out empty URLs
-      const filteredMedia = projectData.media.filter(url => url.trim() !== '')
-      
-      // Check if we have at least one valid URL
-      if (filteredMedia.length === 0) {
-        alert('Please add at least one media URL')
-        return
-      }
-
-      // Make sure we have a cover image
-      const dataToSubmit = {
+    // Filter out empty media URLs
+    const filteredMedia = projectData.media.filter(url => url.trim() !== '')
+    
+    const { data, error } = await supabase
+      .from('projects')
+      .insert([{
         ...projectData,
         media: filteredMedia,
-        cover: projectData.cover || filteredMedia[0]
-      }
+        // If no cover is set, use the first media URL
+        cover: projectData.cover || filteredMedia[0] || ''
+      }])
+      .select()
 
-      // Insert the project
-      const { data, error } = await supabase
-        .from('projects')
-        .insert([dataToSubmit])
-        .select()
+    if (error) {
+      console.error('Error adding project:', error)
+      alert('Error adding project: ' + error.message)
+      return
+    }
 
-      if (error) {
-        console.error('Error adding project:', error)
-        alert(`Error adding project: ${error.message}`)
-        return
-      }
+    alert('Project added successfully!')
+    setProjectData({
+      slug: '',
+      name: '',
+      year: new Date().getFullYear(),
+      company: 'Take Place',
+      type: ['Architecture'],
+      role: ['Design'],
+      description_short: '',
+      description_long: '',
+      media: [''],
+      cover: '',
+      importance: 1
+    })
+  }
 
-      alert('Project added successfully!')
-      // Reset form
-      setProjectData({
-        slug: '',
-        name: '',
-        year: new Date().getFullYear(),
-        company: 'Take Place',
-        type: ['Architecture'] as ProjectType[],
-        role: ['Design'] as ProjectRole[],
-        description_short: '',
-        description_long: '',
-        media: [''],
-        cover: '',
-        importance: 1
-      })
-    } catch (error) {
-      console.error('Error in form submission:', error)
-      alert('Error adding project')
+  const handleMediaChange = (index: number, value: string) => {
+    const newMedia = [...projectData.media]
+    newMedia[index] = value
+    
+    // Add a new empty field if we're at the last field and it's not empty
+    if (index === newMedia.length - 1 && value.trim() !== '' && newMedia.length < 15) {
+      newMedia.push('')
+    }
+    
+    // Remove empty fields except the last one
+    const filteredMedia = newMedia.filter((url, i) => 
+      url.trim() !== '' || i === newMedia.length - 1
+    )
+    
+    setProjectData(prev => ({ ...prev, media: filteredMedia }))
+  }
+
+  const moveUrl = (fromIndex: number, direction: 'up' | 'down') => {
+    const toIndex = direction === 'up' ? fromIndex - 1 : fromIndex + 1
+    
+    if (toIndex < 0 || toIndex >= projectData.media.length) return
+    
+    const newMedia = [...projectData.media]
+    const [movedItem] = newMedia.splice(fromIndex, 1)
+    newMedia.splice(toIndex, 0, movedItem)
+    
+    // If we moved the cover image, update its URL
+    let newCover = projectData.cover
+    if (projectData.cover === projectData.media[fromIndex]) {
+      newCover = movedItem
+    }
+    
+    setProjectData(prev => ({ ...prev, media: newMedia, cover: newCover }))
+  }
+
+  const isValidUrl = (url: string) => {
+    try {
+      new URL(url)
+      return true
+    } catch {
+      return false
     }
   }
 
-  const addMediaField = () => {
-    if (projectData.media.length < 15) {
-      setProjectData(prev => ({
-        ...prev,
-        media: [...prev.media, '']
-      }))
-    }
+  const isImageUrl = (url: string) => {
+    return url.match(/\.(jpeg|jpg|gif|png|webp)$/i) != null
   }
 
-  const removeMediaField = (index: number) => {
-    setProjectData(prev => ({
-      ...prev,
-      media: prev.media.filter((_, i) => i !== index),
-      cover: prev.cover === prev.media[index] ? '' : prev.cover
-    }))
-  }
-
-  const updateMediaUrl = (index: number, url: string) => {
-    setProjectData(prev => ({
-      ...prev,
-      media: prev.media.map((oldUrl, i) => i === index ? url : oldUrl)
-    }))
+  const isVideoUrl = (url: string) => {
+    return url.match(/\.(mp4|webm|ogg)$/i) != null
   }
 
   return (
@@ -104,47 +117,84 @@ export default function AdminPage() {
         <h2 className="text-xl font-semibold mb-4">Add New Project</h2>
         
         <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="border p-4 rounded bg-gray-50">
-            <div className="flex justify-between items-center mb-4">
-              <label className="font-semibold">Media URLs</label>
-              <button
-                type="button"
-                onClick={addMediaField}
-                disabled={projectData.media.length >= 15}
-                className="bg-blue-500 text-white px-3 py-1 rounded text-sm disabled:bg-gray-300"
-              >
-                Add URL Field
-              </button>
-            </div>
-            <div className="space-y-3">
+          <div>
+            <label className="block mb-2">Media URLs (up to 15)</label>
+            <div className="space-y-4">
               {projectData.media.map((url, index) => (
-                <div key={index} className="flex gap-2">
-                  <input
-                    type="url"
-                    value={url}
-                    onChange={(e) => updateMediaUrl(index, e.target.value)}
-                    placeholder="Enter media URL"
-                    className="flex-1 border p-2 rounded"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => removeMediaField(index)}
-                    className="bg-red-500 text-white px-3 rounded hover:bg-red-600"
-                  >
-                    ✕
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setProjectData(prev => ({ ...prev, cover: url }))}
-                    className={`px-3 rounded ${url === projectData.cover ? 'bg-green-500 text-white' : 'bg-gray-200'}`}
-                  >
-                    Cover
-                  </button>
+                <div key={index} className="space-y-2">
+                  <div className="flex gap-2">
+                    <input
+                      type="url"
+                      value={url}
+                      onChange={(e) => handleMediaChange(index, e.target.value)}
+                      placeholder="https://..."
+                      className="flex-1 border p-2"
+                    />
+                    <div className="flex gap-1">
+                      {index > 0 && index < projectData.media.length - 1 && (
+                        <button
+                          type="button"
+                          onClick={() => moveUrl(index, 'up')}
+                          className="px-2 py-1 bg-gray-200 rounded hover:bg-gray-300"
+                        >
+                          ↑
+                        </button>
+                      )}
+                      {index < projectData.media.length - 2 && (
+                        <button
+                          type="button"
+                          onClick={() => moveUrl(index, 'down')}
+                          className="px-2 py-1 bg-gray-200 rounded hover:bg-gray-300"
+                        >
+                          ↓
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => setProjectData(prev => ({ ...prev, cover: url }))}
+                        className={`px-3 py-1 rounded ${
+                          projectData.cover === url 
+                            ? 'bg-blue-500 text-white' 
+                            : 'bg-gray-200'
+                        }`}
+                      >
+                        Set as Cover
+                      </button>
+                    </div>
+                  </div>
+                  
+                  {url && isValidUrl(url) && (
+                    <div className="relative w-full h-40 bg-gray-100 rounded overflow-hidden">
+                      {isImageUrl(url) ? (
+                        <img
+                          src={url}
+                          alt="Preview"
+                          className="w-full h-full object-contain"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).style.display = 'none'
+                          }}
+                        />
+                      ) : isVideoUrl(url) ? (
+                        <video
+                          src={url}
+                          controls
+                          className="w-full h-full"
+                          onError={(e) => {
+                            (e.target as HTMLVideoElement).style.display = 'none'
+                          }}
+                        />
+                      ) : (
+                        <div className="absolute inset-0 flex items-center justify-center text-gray-500">
+                          Unsupported media type
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
-            <p className="text-sm text-gray-500 mt-2">
-              Add up to 15 media URLs. Click "Cover" to set as cover image.
+            <p className="text-sm text-gray-500 mt-1">
+              Add URLs for your media. The first URL will be used as the cover image if none is selected.
             </p>
           </div>
 
@@ -154,7 +204,7 @@ export default function AdminPage() {
               type="text"
               value={projectData.slug}
               onChange={(e) => setProjectData(prev => ({ ...prev, slug: e.target.value }))}
-              className="w-full border p-2 rounded"
+              className="w-full border p-2"
               required
             />
           </div>
@@ -165,7 +215,7 @@ export default function AdminPage() {
               type="text"
               value={projectData.name}
               onChange={(e) => setProjectData(prev => ({ ...prev, name: e.target.value }))}
-              className="w-full border p-2 rounded"
+              className="w-full border p-2"
               required
             />
           </div>
@@ -176,7 +226,7 @@ export default function AdminPage() {
               type="number"
               value={projectData.year}
               onChange={(e) => setProjectData(prev => ({ ...prev, year: parseInt(e.target.value) }))}
-              className="w-full border p-2 rounded"
+              className="w-full border p-2"
               required
             />
           </div>
@@ -186,7 +236,7 @@ export default function AdminPage() {
             <select
               value={projectData.company}
               onChange={(e) => setProjectData(prev => ({ ...prev, company: e.target.value as any }))}
-              className="w-full border p-2 rounded"
+              className="w-full border p-2"
               required
             >
               <option>Take Place</option>
@@ -259,7 +309,7 @@ export default function AdminPage() {
             <textarea
               value={projectData.description_short}
               onChange={(e) => setProjectData(prev => ({ ...prev, description_short: e.target.value }))}
-              className="w-full border p-2 rounded"
+              className="w-full border p-2"
               rows={3}
               required
             />
@@ -270,7 +320,7 @@ export default function AdminPage() {
             <textarea
               value={projectData.description_long}
               onChange={(e) => setProjectData(prev => ({ ...prev, description_long: e.target.value }))}
-              className="w-full border p-2 rounded"
+              className="w-full border p-2"
               rows={6}
               required
             />
@@ -284,7 +334,7 @@ export default function AdminPage() {
               max="10"
               value={projectData.importance}
               onChange={(e) => setProjectData(prev => ({ ...prev, importance: parseInt(e.target.value) }))}
-              className="w-full border p-2 rounded"
+              className="w-full border p-2"
               required
             />
           </div>
