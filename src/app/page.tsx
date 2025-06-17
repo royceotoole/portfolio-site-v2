@@ -16,7 +16,7 @@ export default function Home() {
       const { data, error } = await supabase
         .from('projects')
         .select('media')
-        .eq('id', 'screensaver')
+        .eq('slug', 'screensaver')
         .single()
 
       if (data?.media) {

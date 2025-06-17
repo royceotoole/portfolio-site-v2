@@ -2,16 +2,23 @@
 
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
-import type { ProjectType, ProjectRole } from '@/lib/supabase'
+import type { Project, ProjectType, ProjectRole } from '@/lib/supabase'
 
 export default function AdminPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [projects, setProjects] = useState<Project[]>([])
 
   useEffect(() => {
     checkAuth()
   }, [])
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchProjects()
+    }
+  }, [isAuthenticated])
 
   const checkAuth = async () => {
     const { data: { session } } = await supabase.auth.getSession()
@@ -135,6 +142,34 @@ export default function AdminPage() {
     return url.match(/\.(mp4|webm|ogg)$/i) != null
   }
 
+  const fetchProjects = async () => {
+    const { data } = await supabase
+      .from('projects')
+      .select('*')
+      .order('importance', { ascending: true })
+    
+    if (data) {
+      setProjects(data)
+    }
+  }
+
+  const handleDelete = async (slug: string) => {
+    if (!confirm('Are you sure you want to delete this project?')) {
+      return
+    }
+
+    const { error } = await supabase
+      .from('projects')
+      .delete()
+      .eq('slug', slug)
+
+    if (error) {
+      alert('Error deleting project: ' + error.message)
+    } else {
+      fetchProjects()
+    }
+  }
+
   if (!isAuthenticated) {
     return (
       <div className="min-h-screen p-8">
@@ -187,6 +222,38 @@ export default function AdminPage() {
       </div>
       
       <div className="max-w-3xl mx-auto">
+        <div className="mb-12">
+          <h2 className="text-xl font-semibold mb-4">Existing Projects</h2>
+          <div className="space-y-4">
+            {projects.map((project) => (
+              <div key={project.slug} className="border p-4 rounded flex justify-between items-center">
+                <div>
+                  <h3 className="font-semibold">{project.name}</h3>
+                  <p className="text-sm text-gray-500">
+                    {project.type.join(', ')} • {project.year} • Importance: {project.importance}
+                  </p>
+                </div>
+                <div className="flex gap-2">
+                  <a
+                    href={`/work/${project.slug}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600"
+                  >
+                    View
+                  </a>
+                  <button
+                    onClick={() => handleDelete(project.slug)}
+                    className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
+                  >
+                    Delete
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
         <h2 className="text-xl font-semibold mb-4">Add New Project</h2>
         
         <form onSubmit={handleSubmit} className="space-y-6">
