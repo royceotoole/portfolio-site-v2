@@ -237,7 +237,7 @@ export default function AdminPage() {
                   </div>
                   
                   {url && isValidUrl(url) && (
-                    <div className={`relative w-[500px] h-[300px] bg-gray-100 rounded overflow-hidden ${
+                    <div className={`relative w-[300px] h-[200px] bg-gray-100 rounded overflow-hidden ${
                       projectData.cover === url ? 'ring-2 ring-blue-500' : ''
                     }`}>
                       {isImageUrl(url) ? (
