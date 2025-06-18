@@ -25,5 +25,17 @@ module.exports = {
     '!font-bold',
     'opacity-30',
     'opacity-100',
+    'bg-yellow-400',
+    'bg-gray-400',
+    'bg-red-400',
+    'bg-gray-200',
+    'bg-gray-100',
+    'border-gray-300',
+    'border-gray-200',
+    'divide-gray-300',
+    'font-gt-america',
+    'font-gt-america-mono',
+    'font-quadrant',
+    'font-quadrant-light'
   ]
 } 
