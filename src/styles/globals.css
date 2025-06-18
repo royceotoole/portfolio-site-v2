@@ -4,9 +4,9 @@
 
 @layer base {
   :root {
-    --font-gt-america: 'GT America', sans-serif;
-    --font-gt-america-mono: 'GT America Mono', monospace;
-    --font-quadrant: 'Quadrant', serif;
+    --font-gt-america: 'GT America', system-ui, sans-serif;
+    --font-gt-america-mono: 'GT America Mono', ui-monospace, monospace;
+    --font-quadrant: 'Quadrant', ui-serif, serif;
   }
 
   /* Remove default link styling */
@@ -14,8 +14,14 @@
     color: inherit;
     text-decoration: none;
   }
+
+  /* Base font settings */
+  body {
+    @apply font-gt-america text-base antialiased;
+  }
 }
 
+/* Font family utilities */
 .font-gt-america {
   font-family: var(--font-gt-america);
 }
@@ -26,6 +32,11 @@
 
 .font-quadrant {
   font-family: var(--font-quadrant);
+}
+
+.font-quadrant-light {
+  font-family: var(--font-quadrant);
+  font-weight: 300;
 }
 
 /* Project type colors */

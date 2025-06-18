@@ -2,6 +2,7 @@
 const nextConfig = {
   reactStrictMode: true,
   swcMinify: true,
+  optimizeFonts: true,
   images: {
     remotePatterns: [
       {
@@ -10,6 +11,9 @@ const nextConfig = {
         pathname: '/storage/v1/object/public/**',
       },
     ],
+  },
+  experimental: {
+    optimizePackageImports: ['@vercel/analytics'],
   },
 }
 
