@@ -29,83 +29,128 @@ export default function ProjectPage() {
   }, [slug])
 
   if (!project) {
-    return null
+    return (
+      <div className="min-h-screen p-8 flex items-center justify-center">
+        <div className="text-lg">Loading...</div>
+      </div>
+    )
   }
 
   return (
-    <div className="min-h-screen pt-16">
-      <div className="max-w-6xl mx-auto px-6">
-        <h1 className="font-quadrant text-4xl mb-8">{project.name}</h1>
+    <div className="w-full px-16 min-h-screen pb-16 relative">
+      {/* Fixed Background */}
+      <div className="fixed top-0 left-0 right-0 h-20 bg-white z-20" />
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
-          {/* Project Info */}
-          <div className="space-y-8">
-            <div>
-              <h2 className="font-gt-america-mono text-sm mb-4">Info</h2>
-              <dl className="space-y-2">
-                <div>
-                  <dt className="font-gt-america-mono">Type</dt>
-                  <dd>{project.type.join(', ')}</dd>
+      {/* Fixed Header Section */}
+      <div className="fixed top-20 left-0 right-0 bg-white z-50">
+        <div className="px-16">
+          <h1 className="font-quadrant text-4xl mb-12 pt-4">{project.name}</h1>
+
+          <div className="flex">
+            {/* Left Fixed Header */}
+            <div className="w-64 flex-shrink-0">
+              <div className="mb-8">
+                <div className="flex w-full text-xs font-gt-america-mono border border-gray-300 invisible">
+                  <div className="flex-1 px-4 py-1">SPACER</div>
                 </div>
-                <div>
-                  <dt className="font-gt-america-mono">Role</dt>
-                  <dd>{project.role.join(', ')}</dd>
-                </div>
-                <div>
-                  <dt className="font-gt-america-mono">Year</dt>
-                  <dd>{project.year}</dd>
-                </div>
-                <div>
-                  <dt className="font-gt-america-mono">Company</dt>
-                  <dd>{project.company}</dd>
-                </div>
-              </dl>
+              </div>
+              <div className="font-gt-america-mono text-xs tracking-wide pb-2 border-b border-gray-300">INFO</div>
             </div>
 
-            <div>
-              <h2 className="font-gt-america-mono text-sm mb-4">Description</h2>
-              <p className="whitespace-pre-wrap">{project.description_long}</p>
+            {/* Right Fixed Header */}
+            <div className="flex-1 ml-16">
+              <div className="invisible mb-8">
+                <div className="flex w-full text-xs font-gt-america-mono border border-gray-300">
+                  <div className="flex-1 px-4 py-1">SPACER</div>
+                </div>
+              </div>
+
+              {/* List Headers */}
+              <div className="font-gt-america-mono text-xs pb-2 border-b border-gray-300">
+                PHOTOS
+              </div>
             </div>
           </div>
+        </div>
+      </div>
 
-          {/* Media Gallery */}
-          <div className="md:col-span-2">
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={currentMediaIndex}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.5 }}
-                className="relative aspect-[4/3] mb-4"
-              >
+      {/* Vertical Divider Line - Fixed */}
+      <div className="fixed border-l border-gray-300" style={{ 
+        left: '352px',
+        top: 'calc(226px - 1px)', 
+        bottom: '68px', 
+        width: '1px', 
+        backgroundColor: 'rgb(209 213 219)' 
+      }} />
+
+      {/* Main Content Area */}
+      <div className="flex pt-[226px] relative pb-16 z-0">
+        {/* Left Static Info Content */}
+        <div className="w-64 flex-shrink-0 fixed" style={{ top: 'calc(226px + 2rem)', left: '4rem' }}>
+          <div className="space-y-8 pt-2">
+            {/* Info Section */}
+            <div>
+              <div>
+                <div className="flex justify-between items-center">
+                  <div className="font-gt-america text-sm font-bold pt-2">Type</div>
+                  <div className="font-gt-america text-sm text-right pt-2">{project.type.join(', ')}</div>
+                </div>
+                <div className="flex justify-between items-center mt-4">
+                  <div className="font-gt-america text-sm font-bold">Role</div>
+                  <div className="font-gt-america text-sm text-right">{project.role.join(', ')}</div>
+                </div>
+                <div className="flex justify-between items-center mt-4">
+                  <div className="font-gt-america text-sm font-bold">Year</div>
+                  <div className="font-gt-america text-sm text-right">{project.year}</div>
+                </div>
+                <div className="flex justify-between items-center mt-4">
+                  <div className="font-gt-america text-sm font-bold">Company</div>
+                  <div className="font-gt-america text-sm text-right">{project.company}</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Description Section */}
+            <div>
+              <h3 className="font-gt-america-mono text-xs pb-2 border-b border-gray-300 pt-2">DESCRIPTION</h3>
+              <div className="font-gt-america text-sm pt-2">{project.description_long}</div>
+            </div>
+          </div>
+        </div>
+
+        {/* Right Scrollable Photos Content */}
+        <div className="flex-1 ml-80">
+          <div className="space-y-8 relative z-10">
+            {project.media.map((media, index) => (
+              <div key={media} className="relative aspect-[3/2]">
                 <Image
-                  src={project.media[currentMediaIndex]}
-                  alt={`${project.name} - Image ${currentMediaIndex + 1}`}
+                  src={media}
+                  alt={`${project.name} - Image ${index + 1}`}
                   fill
                   className="object-cover"
-                  priority
+                  priority={index === 0}
                 />
-              </motion.div>
-            </AnimatePresence>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
 
-            <div className="grid grid-cols-6 gap-2">
-              {project.media.map((media, index) => (
-                <button
-                  key={media}
-                  onClick={() => setCurrentMediaIndex(index)}
-                  className={`relative aspect-square ${
-                    index === currentMediaIndex ? 'ring-2 ring-black' : ''
-                  }`}
-                >
-                  <Image
-                    src={media}
-                    alt={`${project.name} - Thumbnail ${index + 1}`}
-                    fill
-                    className="object-cover"
-                  />
-                </button>
-              ))}
+      {/* Fixed Footer with full bottom coverage */}
+      <div className="fixed left-0 right-0 bottom-0 z-[1000] bg-white" style={{ top: 'calc(100% - 64px)' }}>
+        <div className="px-16">
+          <div className="flex">
+            {/* Left Footer Line */}
+            <div className="w-64 flex-shrink-0">
+              <div className="border-t border-gray-300"></div>
+            </div>
+            
+            {/* Vertical Divider Space */}
+            <div className="mx-8"></div>
+            
+            {/* Right Footer Line */}
+            <div className="flex-1">
+              <div className="border-t border-gray-300"></div>
             </div>
           </div>
         </div>
