@@ -20,12 +20,6 @@ export default function Screensaver({ onExit, disableInteraction, excludeVideos 
   const [images, setImages] = useState<string[]>([])
   const [mediaSettings, setMediaSettings] = useState<MediaSettings[]>([])
   const [currentIndex, setCurrentIndex] = useState(0)
-  const [currentUrl, setCurrentUrl] = useState<string>('')
-  const [currentSettings, setCurrentSettings] = useState<MediaSettings>({})
-  const [isVideo, setIsVideo] = useState(false)
-  const [isNextVideo, setIsNextVideo] = useState(false)
-  const [nextUrl, setNextUrl] = useState<string>('')
-  const [nextSettings, setNextSettings] = useState<MediaSettings>({})
   const [isLoading, setIsLoading] = useState(true)
   const [isVideoEnded, setIsVideoEnded] = useState(false)
   const nextVideoRef = useRef<HTMLVideoElement>(null)
@@ -35,47 +29,38 @@ export default function Screensaver({ onExit, disableInteraction, excludeVideos 
   useEffect(() => {
     const fetchMedia = async () => {
       try {
-        const { data: mediaData } = await supabase
-          .from('media')
+        // Get the Screensaver project first
+        const { data: project } = await supabase
+          .from('projects')
           .select('*')
-          .order('created_at', { ascending: false })
+          .eq('name', 'Screensaver')
+          .single()
 
-        if (mediaData) {
+        if (project?.media) {
+          let mediaUrls = project.media
+          const settings = project.media_settings || Array(project.media.length).fill({})
+
           // Filter out videos if excludeVideos is true
-          const filteredMedia = excludeVideos 
-            ? mediaData.filter(item => !item.url.toLowerCase().endsWith('.mp4'))
-            : mediaData
-
-          const urls = filteredMedia.map(item => item.url)
-          const settings = filteredMedia.map(item => ({
-            start: item.start_time,
-            end: item.end_time
-          }))
-
-          setImages(urls)
-          setMediaSettings(settings)
-          
-          // Set initial media
-          if (urls.length > 0) {
-            setCurrentUrl(urls[0])
-            setCurrentSettings(settings[0] || {})
-            setIsVideo(urls[0].toLowerCase().endsWith('.mp4'))
-            
-            // Set up next media
-            if (urls.length > 1) {
-              setNextUrl(urls[1])
-              setNextSettings(settings[1] || {})
-              setIsNextVideo(urls[1].toLowerCase().endsWith('.mp4'))
-            }
+          if (excludeVideos) {
+            mediaUrls = mediaUrls.filter((url: string) => !url.toLowerCase().endsWith('.mp4'))
           }
+
+          setImages(mediaUrls)
+          setMediaSettings(settings)
+          setIsLoading(false)
         }
       } catch (error) {
         console.error('Error fetching media:', error)
+        setIsLoading(false)
       }
     }
 
     fetchMedia()
   }, [excludeVideos])
+
+  const isVideoUrl = (url: string) => {
+    return url?.toLowerCase().endsWith('.mp4')
+  }
 
   const handleVideoEnd = () => {
     setIsVideoEnded(true)
@@ -84,26 +69,15 @@ export default function Screensaver({ onExit, disableInteraction, excludeVideos 
 
   const advanceMedia = () => {
     if (images.length === 0) return
-
-    // Calculate next index
-    const nextIndex = (currentIndex + 1) % images.length
-    setCurrentIndex(nextIndex)
-
-    // Update current media
-    const newCurrentUrl = images[nextIndex]
-    setCurrentUrl(newCurrentUrl)
-    setCurrentSettings(mediaSettings[nextIndex] || {})
-    setIsVideo(newCurrentUrl.toLowerCase().endsWith('.mp4'))
-
-    // Update next media
-    const nextNextIndex = (nextIndex + 1) % images.length
-    const newNextUrl = images[nextNextIndex]
-    setNextUrl(newNextUrl)
-    setNextSettings(mediaSettings[nextNextIndex] || {})
-    setIsNextVideo(newNextUrl.toLowerCase().endsWith('.mp4'))
+    setCurrentIndex((prevIndex) => (prevIndex + 1) % images.length)
   }
 
   useEffect(() => {
+    if (images.length === 0) return
+
+    const currentUrl = images[currentIndex]
+    const isVideo = isVideoUrl(currentUrl)
+
     if (!isVideo && !isLoading) {
       // For images, set up interval
       intervalRef.current = setInterval(advanceMedia, 5000)
@@ -114,13 +88,33 @@ export default function Screensaver({ onExit, disableInteraction, excludeVideos 
         clearInterval(intervalRef.current)
       }
     }
-  }, [isVideo, isLoading, currentIndex])
+  }, [images, currentIndex, isLoading])
 
   const handleClick = () => {
     if (disableInteraction) return
     onExit?.()
     router.push('/work')
   }
+
+  if (isLoading) {
+    return (
+      <div className="fixed inset-0 bg-black flex items-center justify-center">
+        <div className="w-8 h-8 border-4 border-white/20 border-t-white rounded-full animate-spin" />
+      </div>
+    )
+  }
+
+  if (images.length === 0) {
+    return null
+  }
+
+  const currentUrl = images[currentIndex]
+  const currentSettings = mediaSettings[currentIndex] || {}
+  const isVideo = isVideoUrl(currentUrl)
+  const nextIndex = (currentIndex + 1) % images.length
+  const nextUrl = images[nextIndex]
+  const nextSettings = mediaSettings[nextIndex] || {}
+  const isNextVideo = isVideoUrl(nextUrl)
 
   return (
     <div 
@@ -155,6 +149,7 @@ export default function Screensaver({ onExit, disableInteraction, excludeVideos 
               WebkitBackfaceVisibility: 'hidden',
               WebkitTransform: 'translate3d(0,0,0)'
             }}
+            onLoad={() => setIsLoading(false)}
           />
         )}
       </div>
