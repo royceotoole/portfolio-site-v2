@@ -1,7 +1,8 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
+import Image from 'next/image'
 import { supabase } from '@/lib/supabase'
 import type { MediaSettings } from '@/lib/supabase'
 import VideoPlayer from '@/components/VideoPlayer'
@@ -39,7 +40,6 @@ export default function Screensaver({ onExit, disableInteraction }: ScreensaverP
   const [nextIndex, setNextIndex] = useState<number | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [isVideoEnded, setIsVideoEnded] = useState(false)
-  const [fadeOut, setFadeOut] = useState(false)
   const router = useRouter()
   const intervalRef = useRef<NodeJS.Timeout>()
   const imageCache = useRef<HTMLImageElement[]>([])
@@ -56,21 +56,6 @@ export default function Screensaver({ onExit, disableInteraction }: ScreensaverP
     }
   }, [])
 
-  // Filter out videos for mobile version
-  useEffect(() => {
-    if (disableInteraction && images.length > 0) {
-      // On mobile, only use images
-      const imageOnly = images.filter(url => !isVideoUrl(url))
-      const imageSettings = mediaSettings.filter((_, index) => !isVideoUrl(images[index]))
-      
-      if (imageOnly.length > 0) {
-        setImages(imageOnly)
-        setMediaSettings(imageSettings)
-        setCurrentIndex(0)
-      }
-    }
-  }, [disableInteraction, images.length])
-
   // Preload images when the images array changes
   useEffect(() => {
     // Clear existing cache
@@ -79,7 +64,7 @@ export default function Screensaver({ onExit, disableInteraction }: ScreensaverP
     // Preload all images
     images.forEach((url) => {
       if (!isVideoUrl(url)) {
-        const img = new Image()
+        const img = document.createElement('img')
         img.src = url
         imageCache.current.push(img)
       }
@@ -102,14 +87,10 @@ export default function Screensaver({ onExit, disableInteraction }: ScreensaverP
     const isVideo = isVideoUrl(currentUrl)
 
     if (!isVideo) {
-      // For images, change every 2 seconds with fade transition
+      // For images, change every 1.5 seconds
       intervalRef.current = setInterval(() => {
-        setFadeOut(true)
-        setTimeout(() => {
-          setCurrentIndex(next)
-          setFadeOut(false)
-        }, 300) // Wait for fade out before changing image
-      }, 2000)
+        setCurrentIndex(next)
+      }, 1500)
     }
 
     return () => {
@@ -119,19 +100,58 @@ export default function Screensaver({ onExit, disableInteraction }: ScreensaverP
     }
   }, [images, currentIndex, isVideoEnded])
 
-  const handleVideoEnd = () => {
-    console.log('Video ended')
-    setIsVideoEnded(true)
+  const handleVideoEnd = useCallback(() => {
+    if (disableInteraction) return // Don't handle video events on mobile
     setCurrentIndex((prevIndex) => (prevIndex + 1) % images.length)
-  }
+  }, [images.length, disableInteraction])
+
+  useEffect(() => {
+    if (images.length === 0) return
+
+    const timer = setInterval(() => {
+      if (isVideoUrl(images[currentIndex]) && !disableInteraction) return // Don't auto-advance during video playback on desktop
+      setCurrentIndex((prevIndex) => {
+        let nextIndex = (prevIndex + 1) % images.length
+        // On mobile, skip videos by finding next image
+        if (disableInteraction) {
+          while (images[nextIndex]?.endsWith('.mp4')) {
+            nextIndex = (nextIndex + 1) % images.length
+          }
+        }
+        return nextIndex
+      })
+    }, 1500)
+
+    return () => clearInterval(timer)
+  }, [images, currentIndex, disableInteraction])
+
+  useEffect(() => {
+    if (images.length === 0) return
+    
+    // On mobile, ensure we start with an image
+    if (disableInteraction) {
+      let safeIndex = 0
+      while (images[safeIndex]?.endsWith('.mp4')) {
+        safeIndex = (safeIndex + 1) % images.length
+      }
+      setCurrentIndex(safeIndex)
+    } else {
+      setCurrentIndex(0)
+    }
+  }, [images, disableInteraction])
 
   const loadScreensaverImages = async () => {
+    console.log('Starting to load screensaver images...')
     try {
+      // Get the exact project named "Screensaver"
       const { data: project, error } = await supabase
         .from('projects')
         .select('*')
         .eq('name', 'Screensaver')
         .single()
+
+      console.log('Full project data:', project)
+      console.log('Error if any:', error)
 
       if (error) {
         console.error('Supabase error:', error)
@@ -139,8 +159,14 @@ export default function Screensaver({ onExit, disableInteraction }: ScreensaverP
         return
       }
 
-      if (!project || !project.media?.length) {
-        console.log('No project or media found')
+      if (!project) {
+        console.log('No project found with name "Screensaver"')
+        setIsLoading(false)
+        return
+      }
+
+      if (!project.media?.length) {
+        console.log('Project found but no media:', project)
         setIsLoading(false)
         return
       }
@@ -150,6 +176,9 @@ export default function Screensaver({ onExit, disableInteraction }: ScreensaverP
 
       // Shuffle both arrays while keeping them aligned
       const [shuffledMedia, shuffledSettings] = shuffleArrays(project.media, settings)
+
+      console.log('Setting shuffled media:', shuffledMedia)
+      console.log('Setting shuffled media settings:', shuffledSettings)
       
       setImages(shuffledMedia)
       setMediaSettings(shuffledSettings)
@@ -197,10 +226,7 @@ export default function Screensaver({ onExit, disableInteraction }: ScreensaverP
       onClick={handleClick}
     >
       {/* Current media item */}
-      <div 
-        className={`absolute inset-0 transition-opacity duration-300 ${fadeOut ? 'opacity-0' : 'opacity-100'}`} 
-        style={{ backfaceVisibility: 'hidden', transform: 'translate3d(0,0,0)' }}
-      >
+      <div className="absolute inset-0" style={{ backfaceVisibility: 'hidden', transform: 'translate3d(0,0,0)' }}>
         {isVideo ? (
           <VideoPlayer
             key={`${currentUrl}-${currentSettings.start}-${currentSettings.end}`}
@@ -230,13 +256,6 @@ export default function Screensaver({ onExit, disableInteraction }: ScreensaverP
           />
         )}
       </div>
-
-      {/* Preload next image */}
-      {nextUrl && !isNextVideo && (
-        <div className="hidden">
-          <img src={nextUrl} alt="" />
-        </div>
-      )}
 
       {/* Preload next video if it exists and is a video */}
       {isNextVideo && nextUrl && nextSettings && (
