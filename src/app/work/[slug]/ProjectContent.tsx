@@ -178,7 +178,7 @@ export default function ProjectContent({ project }: { project: Project }) {
               {/* Horizontal Scrolling Container */}
               <div 
                 ref={scrollContainerRef}
-                className="flex overflow-x-auto overflow-y-hidden w-full h-full ml-8 pt-6 pb-8 lg:pb-6 scroll-smooth"
+                className="flex overflow-x-auto overflow-y-hidden w-full h-full ml-8 pt-6 pb-12 lg:pb-10 scroll-smooth"
                 style={{ scrollBehavior: 'smooth' }}
               >
                 {project.media.map((media, index) => {
