@@ -165,6 +165,22 @@ export default function Screensaver({ onExit, disableInteraction }: ScreensaverP
     return url?.match(/\.(mp4|webm|mov)$/i) !== null
   }
 
+  // For mobile, only use images and simpler transitions
+  useEffect(() => {
+    if (!disableInteraction) return // Only apply this logic for mobile mode
+
+    // Filter out videos for mobile
+    const imageOnlyUrls = images.filter(url => !url.match(/\.(mp4|webm|mov)$/i))
+    setImages(imageOnlyUrls)
+    
+    // Use a simpler transition for mobile
+    const interval = setInterval(() => {
+      setCurrentIndex((prevIndex) => (prevIndex + 1) % imageOnlyUrls.length)
+    }, 5000) // Change image every 5 seconds
+
+    return () => clearInterval(interval)
+  }, [images, disableInteraction])
+
   if (isLoading) {
     return (
       <div className="fixed inset-0 bg-black flex items-center justify-center">
@@ -193,7 +209,7 @@ export default function Screensaver({ onExit, disableInteraction }: ScreensaverP
     >
       {/* Current media item */}
       <div className="absolute inset-0" style={{ backfaceVisibility: 'hidden', transform: 'translate3d(0,0,0)' }}>
-        {isVideo ? (
+        {isVideo && !disableInteraction ? (
           <VideoPlayer
             key={`${currentUrl}-${currentSettings.start}-${currentSettings.end}`}
             src={currentUrl}
@@ -217,14 +233,15 @@ export default function Screensaver({ onExit, disableInteraction }: ScreensaverP
               backfaceVisibility: 'hidden',
               transform: 'translate3d(0,0,0)',
               WebkitBackfaceVisibility: 'hidden',
-              WebkitTransform: 'translate3d(0,0,0)'
+              WebkitTransform: 'translate3d(0,0,0)',
+              transition: disableInteraction ? 'opacity 1s ease-in-out' : 'none'
             }}
           />
         )}
       </div>
 
-      {/* Preload next video if it exists and is a video */}
-      {isNextVideo && nextUrl && nextSettings && (
+      {/* Preload next image/video */}
+      {!disableInteraction && isNextVideo && nextUrl && nextSettings && (
         <div className="hidden">
           <video
             ref={nextVideoRef}
