@@ -1,5 +1,5 @@
-import { gtAmerica, gtAmericaMono, quadrant } from '@/styles/fonts'
-import '@/styles/globals.css'
+import { gtAmerica, gtAmericaMono, quadrant } from '../styles/fonts'
+import '../styles/globals.css'
 import type { Metadata } from 'next'
 import { Analytics } from '@vercel/analytics/react'
 import ClientLayout from './ClientLayout'

@@ -6,7 +6,7 @@ import dynamic from 'next/dynamic'
 import { isMobile } from '../utils/isMobile'
 
 // Dynamically import the Screensaver component to avoid hydration issues
-const Screensaver = dynamic(() => import('@/components/Screensaver'), {
+const Screensaver = dynamic(() => import('../components/Screensaver'), {
   ssr: false,
   loading: () => (
     <div className="fixed inset-0 bg-black flex items-center justify-center">
