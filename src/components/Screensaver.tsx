@@ -56,6 +56,21 @@ export default function Screensaver({ onExit, disableInteraction }: ScreensaverP
     }
   }, [])
 
+  // Filter out videos for mobile version
+  useEffect(() => {
+    if (disableInteraction && images.length > 0) {
+      // On mobile, only use images
+      const imageOnly = images.filter(url => !isVideoUrl(url))
+      const imageSettings = mediaSettings.filter((_, index) => !isVideoUrl(images[index]))
+      
+      if (imageOnly.length > 0) {
+        setImages(imageOnly)
+        setMediaSettings(imageSettings)
+        setCurrentIndex(0)
+      }
+    }
+  }, [disableInteraction, images.length])
+
   // Preload images when the images array changes
   useEffect(() => {
     // Clear existing cache
@@ -109,15 +124,11 @@ export default function Screensaver({ onExit, disableInteraction }: ScreensaverP
   const loadScreensaverImages = async () => {
     console.log('Starting to load screensaver images...')
     try {
-      // Get the exact project named "Screensaver"
       const { data: project, error } = await supabase
         .from('projects')
         .select('*')
         .eq('name', 'Screensaver')
         .single()
-
-      console.log('Full project data:', project)
-      console.log('Error if any:', error)
 
       if (error) {
         console.error('Supabase error:', error)
@@ -125,14 +136,8 @@ export default function Screensaver({ onExit, disableInteraction }: ScreensaverP
         return
       }
 
-      if (!project) {
-        console.log('No project found with name "Screensaver"')
-        setIsLoading(false)
-        return
-      }
-
-      if (!project.media?.length) {
-        console.log('Project found but no media:', project)
+      if (!project || !project.media?.length) {
+        console.log('No project or media found')
         setIsLoading(false)
         return
       }
@@ -142,9 +147,6 @@ export default function Screensaver({ onExit, disableInteraction }: ScreensaverP
 
       // Shuffle both arrays while keeping them aligned
       const [shuffledMedia, shuffledSettings] = shuffleArrays(project.media, settings)
-
-      console.log('Setting shuffled media:', shuffledMedia)
-      console.log('Setting shuffled media settings:', shuffledSettings)
       
       setImages(shuffledMedia)
       setMediaSettings(shuffledSettings)
