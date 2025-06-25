@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { isMobile } from '@/utils/isMobile'
 
 export default function ClientLayout({
   children,
@@ -10,6 +11,12 @@ export default function ClientLayout({
 }) {
   const pathname = usePathname()
   const isHomePage = pathname === '/'
+  const isMobileDevice = isMobile()
+
+  // Don't show header on mobile landing page
+  if (isMobileDevice && isHomePage) {
+    return <>{children}</>
+  }
 
   return (
     <div className="min-h-screen bg-white">

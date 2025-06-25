@@ -30,9 +30,10 @@ function shuffleArrays(media: string[], settings: MediaSettings[]): [string[], M
 
 interface ScreensaverProps {
   onExit?: () => void
+  disableInteraction?: boolean
 }
 
-export default function Screensaver({ onExit }: ScreensaverProps) {
+export default function Screensaver({ onExit, disableInteraction }: ScreensaverProps) {
   const [images, setImages] = useState<string[]>([])
   const [mediaSettings, setMediaSettings] = useState<MediaSettings[]>([])
   const [currentIndex, setCurrentIndex] = useState(0)
@@ -155,6 +156,7 @@ export default function Screensaver({ onExit }: ScreensaverProps) {
   }
 
   const handleClick = () => {
+    if (disableInteraction) return
     onExit?.()
     router.push('/work')
   }
@@ -232,12 +234,16 @@ export default function Screensaver({ onExit }: ScreensaverProps) {
         </div>
       )}
 
-      {/* Overlay elements */}
-      <div className="absolute inset-0 bg-black/20 pointer-events-none" />
-      <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-black/50 to-transparent pointer-events-none" />
-      <div className="absolute inset-x-0 bottom-8 text-center">
-        <p className="text-white text-lg font-gt-america">Click anywhere to enter</p>
-      </div>
+      {/* Overlay elements - Only show if not in mobile mode */}
+      {!disableInteraction && (
+        <>
+          <div className="absolute inset-0 bg-black/20 pointer-events-none" />
+          <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-black/50 to-transparent pointer-events-none" />
+          <div className="absolute inset-x-0 bottom-8 text-center">
+            <p className="text-white text-lg font-gt-america">Click anywhere to enter</p>
+          </div>
+        </>
+      )}
     </div>
   )
 } 
