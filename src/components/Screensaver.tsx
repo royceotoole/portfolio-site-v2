@@ -37,122 +37,78 @@ export default function Screensaver({ onExit, disableInteraction }: ScreensaverP
   const [images, setImages] = useState<string[]>([])
   const [mediaSettings, setMediaSettings] = useState<MediaSettings[]>([])
   const [currentIndex, setCurrentIndex] = useState(0)
-  const [nextIndex, setNextIndex] = useState<number | null>(null)
   const [isLoading, setIsLoading] = useState(true)
-  const [isVideoEnded, setIsVideoEnded] = useState(false)
+  const nextVideoRef = useRef<HTMLVideoElement>(null)
+  const [mobileImages, setMobileImages] = useState<string[]>([])
+  const [mobileIndex, setMobileIndex] = useState(0)
   const router = useRouter()
-  const intervalRef = useRef<NodeJS.Timeout>()
-  const imageCache = useRef<HTMLImageElement[]>([])
-  const nextVideoRef = useRef<HTMLVideoElement | null>(null)
 
+  // Fetch media on mount
   useEffect(() => {
-    console.log('Screensaver component mounted')
-    loadScreensaverImages()
+    const fetchMedia = async () => {
+      try {
+        const { data: projects } = await supabase
+          .from('projects')
+          .select('media, media_settings')
+          .not('media', 'eq', '{}')
 
-    return () => {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current)
+        if (!projects) return
+
+        const allMedia = projects.flatMap(project => project.media)
+        const allSettings = projects.flatMap((project) => 
+          project.media.map((_: string, mediaIndex: number) => project.media_settings?.[mediaIndex] || {})
+        )
+
+        setImages(allMedia)
+        setMediaSettings(allSettings)
+
+        // Set up mobile images (no videos)
+        const imageOnlyUrls = allMedia.filter(url => !url.match(/\.(mp4|webm|mov)$/i))
+        setMobileImages(imageOnlyUrls)
+
+        setIsLoading(false)
+      } catch (error) {
+        console.error('Error fetching media:', error)
       }
     }
+
+    fetchMedia()
   }, [])
 
-  // Preload images when the images array changes
+  // Mobile-specific image rotation
   useEffect(() => {
-    // Clear existing cache
-    imageCache.current = []
-    
-    // Preload all images
-    images.forEach((url) => {
-      if (!isVideoUrl(url)) {
-        const img = document.createElement('img')
-        img.src = url
-        imageCache.current.push(img)
-      }
-    })
-  }, [images])
+    if (!disableInteraction || mobileImages.length === 0) return
 
+    const interval = setInterval(() => {
+      setMobileIndex(prevIndex => (prevIndex + 1) % mobileImages.length)
+    }, 5000)
+
+    return () => clearInterval(interval)
+  }, [disableInteraction, mobileImages])
+
+  // Desktop video/image handling
   useEffect(() => {
-    if (images.length === 0) return
+    if (disableInteraction || images.length === 0) return
 
-    // Calculate next index
-    const next = (currentIndex + 1) % images.length
-    setNextIndex(next)
+    const interval = setInterval(() => {
+      setCurrentIndex(prevIndex => (prevIndex + 1) % images.length)
+    }, 5000)
 
-    // Clear any existing interval
-    if (intervalRef.current) {
-      clearInterval(intervalRef.current)
-    }
+    return () => clearInterval(interval)
+  }, [disableInteraction, images])
 
-    const currentUrl = images[currentIndex]
-    const isVideo = isVideoUrl(currentUrl)
+  const currentUrl = disableInteraction ? mobileImages[mobileIndex] : images[currentIndex]
+  const currentSettings = mediaSettings[currentIndex] || {}
+  const isVideo = currentUrl?.match(/\.(mp4|webm|mov)$/i) !== null
 
-    if (!isVideo) {
-      // For images, change every 1.5 seconds
-      intervalRef.current = setInterval(() => {
-        setCurrentIndex(next)
-      }, 1500)
-    }
-
-    return () => {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current)
-      }
-    }
-  }, [images, currentIndex, isVideoEnded])
+  const nextIndex = (currentIndex + 1) % images.length
+  const nextUrl = images[nextIndex]
+  const nextSettings = mediaSettings[nextIndex] || {}
+  const isNextVideo = nextUrl?.match(/\.(mp4|webm|mov)$/i) !== null
 
   const handleVideoEnd = () => {
-    console.log('Video ended')
-    setIsVideoEnded(true)
-    setCurrentIndex((prevIndex) => (prevIndex + 1) % images.length)
-  }
-
-  const loadScreensaverImages = async () => {
-    console.log('Starting to load screensaver images...')
-    try {
-      // Get the exact project named "Screensaver"
-      const { data: project, error } = await supabase
-        .from('projects')
-        .select('*')
-        .eq('name', 'Screensaver')
-        .single()
-
-      console.log('Full project data:', project)
-      console.log('Error if any:', error)
-
-      if (error) {
-        console.error('Supabase error:', error)
-        setIsLoading(false)
-        return
-      }
-
-      if (!project) {
-        console.log('No project found with name "Screensaver"')
-        setIsLoading(false)
-        return
-      }
-
-      if (!project.media?.length) {
-        console.log('Project found but no media:', project)
-        setIsLoading(false)
-        return
-      }
-
-      // Create empty settings array if none exists
-      const settings = project.media_settings || Array(project.media.length).fill({})
-
-      // Shuffle both arrays while keeping them aligned
-      const [shuffledMedia, shuffledSettings] = shuffleArrays(project.media, settings)
-
-      console.log('Setting shuffled media:', shuffledMedia)
-      console.log('Setting shuffled media settings:', shuffledSettings)
-      
-      setImages(shuffledMedia)
-      setMediaSettings(shuffledSettings)
-      setIsLoading(false)
-    } catch (err) {
-      console.error('Unexpected error:', err)
-      setIsLoading(false)
-    }
+    if (disableInteraction) return
+    setCurrentIndex(nextIndex)
   }
 
   const handleClick = () => {
@@ -161,26 +117,6 @@ export default function Screensaver({ onExit, disableInteraction }: ScreensaverP
     router.push('/work')
   }
 
-  const isVideoUrl = (url: string) => {
-    return url?.match(/\.(mp4|webm|mov)$/i) !== null
-  }
-
-  // For mobile, only use images and simpler transitions
-  useEffect(() => {
-    if (!disableInteraction) return // Only apply this logic for mobile mode
-
-    // Filter out videos for mobile
-    const imageOnlyUrls = images.filter(url => !url.match(/\.(mp4|webm|mov)$/i))
-    setImages(imageOnlyUrls)
-    
-    // Use a simpler transition for mobile
-    const interval = setInterval(() => {
-      setCurrentIndex((prevIndex) => (prevIndex + 1) % imageOnlyUrls.length)
-    }, 5000) // Change image every 5 seconds
-
-    return () => clearInterval(interval)
-  }, [images, disableInteraction])
-
   if (isLoading) {
     return (
       <div className="fixed inset-0 bg-black flex items-center justify-center">
@@ -188,19 +124,6 @@ export default function Screensaver({ onExit, disableInteraction }: ScreensaverP
       </div>
     )
   }
-
-  if (images.length === 0) {
-    console.log('No images found, redirecting to /work')
-    router.push('/work')
-    return null
-  }
-
-  const currentUrl = images[currentIndex]
-  const nextUrl = nextIndex !== null ? images[nextIndex] : null
-  const currentSettings = mediaSettings[currentIndex] || {}
-  const nextSettings = nextIndex !== null ? mediaSettings[nextIndex] || {} : null
-  const isVideo = isVideoUrl(currentUrl)
-  const isNextVideo = nextUrl ? isVideoUrl(nextUrl) : false
 
   return (
     <div 
