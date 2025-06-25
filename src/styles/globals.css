@@ -6,7 +6,7 @@
   :root {
     --font-gt-america: 'GT America', system-ui, sans-serif;
     --font-gt-america-mono: 'GT America Mono', ui-monospace, monospace;
-    --font-quadrant: 'Quadrant', ui-serif, serif;
+    --font-quadrant: 'QuadrantText-201218-Light', ui-serif, serif;
   }
 
   /* Remove default link styling */
@@ -21,6 +21,16 @@
   }
 }
 
+/* Hide scrollbar but maintain functionality */
+.hide-scrollbar {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;     /* Firefox */
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;             /* Chrome, Safari and Opera */
+}
+
 /* Font family utilities */
 .font-gt-america {
   font-family: var(--font-gt-america);
@@ -28,6 +38,7 @@
 
 .font-gt-america-mono {
   font-family: var(--font-gt-america-mono);
+  letter-spacing: 0.02em;
 }
 
 .font-quadrant {

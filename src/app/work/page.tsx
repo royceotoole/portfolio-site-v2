@@ -7,6 +7,7 @@ import Image from 'next/image'
 import { motion, AnimatePresence } from 'framer-motion'
 import { supabase } from '@/lib/supabase'
 import type { Project, ProjectType, ProjectRole } from '@/lib/supabase'
+import VideoPlayer from '@/components/VideoPlayer'
 
 interface Filters {
   type: ProjectType[]
@@ -61,10 +62,7 @@ function ProjectPreview({ project, onClose }: { project: Project; onClose: () =>
 function WorkContent() {
   const [projects, setProjects] = useState<Project[]>([])
   const [isGridView, setIsGridView] = useState(false)
-  const [filters, setFilters] = useState<Filters>({
-    type: ['Architecture', 'Objects', 'Visual'] as ProjectType[],
-    role: ['Design', 'Build', 'Manage'] as ProjectRole[],
-  })
+  const [filters, setFilters] = useState<Filters>({ type: [], role: [] })
   const [previewProject, setPreviewProject] = useState<Project | null>(null)
   const searchParams = useSearchParams()
   const router = useRouter()
@@ -101,36 +99,53 @@ function WorkContent() {
   }, []) // Only fetch when component mounts
 
   useEffect(() => {
-    const type = searchParams.get('type')?.split(',') as ProjectType[]
-    const role = searchParams.get('role')?.split(',') as ProjectRole[]
+    const type = searchParams?.get('type')?.split(',').filter(Boolean) as ProjectType[]
+    const role = searchParams?.get('role')?.split(',').filter(Boolean) as ProjectRole[]
 
-    console.log('Current filters:', { type, role })
-
-    setFilters({
-      type: type || ['Architecture', 'Objects', 'Visual'],
-      role: role || ['Design', 'Build', 'Manage'],
-    })
+    // If no URL parameters, set all filters to be active
+    if (!searchParams?.has('type') && !searchParams?.has('role')) {
+      setFilters({
+        type: ['Architecture', 'Objects', 'Visual'],
+        role: ['Design', 'Build', 'Manage']
+      })
+    } else {
+      // Otherwise use the URL parameters
+      setFilters({
+        type: type || [],
+        role: role || []
+      })
+    }
   }, [searchParams])
 
   const updateFilters = (newFilters: Filters) => {
-    const params = new URLSearchParams()
+    const params = new URLSearchParams(searchParams?.toString() || '')
+    
+    // Only add parameters if there are filters selected
     if (newFilters.type?.length) {
       params.set('type', newFilters.type.join(','))
+    } else {
+      params.delete('type')
     }
+    
     if (newFilters.role?.length) {
       params.set('role', newFilters.role.join(','))
+    } else {
+      params.delete('role')
     }
-    router.push(`/work?${params.toString()}`)
+
+    // Update the URL without reloading the page
+    router.push(`/work?${params.toString()}`, { scroll: false })
+    setFilters(newFilters)
   }
 
   const getTypeColor = (type: ProjectType) => {
     switch (type) {
       case 'Architecture':
-        return 'bg-yellow-400'
+        return 'bg-architecture'
       case 'Objects':
-        return 'bg-gray-400'
+        return 'bg-objects'
       case 'Visual':
-        return 'bg-red-400'
+        return 'bg-visual'
       default:
         return 'bg-gray-200'
     }
@@ -139,8 +154,10 @@ function WorkContent() {
   const filteredProjects = projects.filter(project => {
     // If no type filters are selected, show all types
     const typeMatch = filters.type.length === 0 || project.type.some(t => filters.type.includes(t))
-    // If no role filters are selected, show all roles
+    
+    // For roles, show projects that contain ANY of the selected roles
     const roleMatch = filters.role.length === 0 || project.role.some(r => filters.role.includes(r))
+    
     return typeMatch && roleMatch
   })
 
@@ -152,44 +169,44 @@ function WorkContent() {
       {/* Fixed Header Section */}
       <div className="fixed top-20 left-0 right-0 bg-white z-50">
         <div className="px-16">
-          <h1 className="font-quadrant text-4xl mb-12 pt-4">Work</h1>
+          <h1 className="font-quadrant-light text-4xl mb-12 pt-4">Work</h1>
 
           <div className="flex">
             {/* Left Fixed Header */}
             <div className="w-64 flex-shrink-0">
               <div className="mb-8">
-                <div className="flex w-full text-xs font-gt-america-mono border border-gray-300">
-                  <button
-                    onClick={() => setIsGridView(true)}
-                    className={`flex-1 px-4 py-1 ${isGridView ? 'bg-gray-100' : ''}`}
-                  >
-                    GRID
-                  </button>
+                <div className="flex w-full text-xs font-gt-america-mono border border-gray-350">
                   <button
                     onClick={() => setIsGridView(false)}
-                    className={`flex-1 px-4 py-1 ${!isGridView ? 'bg-gray-100' : ''}`}
+                    className={`flex-1 px-4 py-1 hover:text-gray-600 ${!isGridView ? 'bg-gray-100' : ''}`}
                   >
                     LIST
                   </button>
+                  <button
+                    onClick={() => setIsGridView(true)}
+                    className={`flex-1 px-4 py-1 hover:text-gray-600 ${isGridView ? 'bg-gray-100' : ''}`}
+                  >
+                    GRID
+                  </button>
                 </div>
               </div>
-              <div className="font-gt-america-mono text-xs tracking-wide pb-2 border-b border-gray-300">FILTER</div>
+              <div className="font-gt-america-mono text-xs tracking-wide pb-2 border-b border-gray-350">FILTER</div>
             </div>
 
             {/* Right Fixed Header */}
             <div className="flex-1 ml-16">
               <div className="invisible mb-8">
-                <div className="flex w-full text-xs font-gt-america-mono border border-gray-300">
+                <div className="flex w-full text-xs font-gt-america-mono border border-gray-350">
                   <div className="flex-1 px-4 py-1">SPACER</div>
                 </div>
               </div>
 
-              {/* List Headers */}
-              <div className="flex font-gt-america-mono text-xs pb-2 border-b border-gray-300">
-                <div className="w-72">PROJECT</div>
-                <div className="flex-1">DESCRIPTION</div>
-                <div className="w-40">ROLE</div>
-                <div className="w-20 text-right">YEAR</div>
+              {/* List Headers and Border */}
+              <div className="flex font-gt-america-mono text-xs pb-2 border-b border-gray-350">
+                <div className={`w-[21.6rem] ${isGridView ? 'opacity-0' : ''}`}>PROJECT</div>
+                <div className={`flex-1 ${isGridView ? 'opacity-0' : ''}`}>DESCRIPTION</div>
+                <div className={`w-64 ${isGridView ? 'opacity-0' : ''}`}>ROLE</div>
+                <div className={`w-20 text-right ${isGridView ? 'opacity-0' : ''}`}>YEAR</div>
               </div>
             </div>
           </div>
@@ -197,12 +214,12 @@ function WorkContent() {
       </div>
 
       {/* Vertical Divider Line - Fixed */}
-      <div className="fixed border-l border-gray-300" style={{ 
+      <div className="fixed border-l border-gray-350" style={{ 
         left: '352px',
         top: 'calc(226px - 1px)', 
         bottom: '68px', 
         width: '1px', 
-        backgroundColor: 'rgb(209 213 219)' 
+        backgroundColor: 'rgb(182, 188, 197)' 
       }} />
 
       {/* Main Content Area */}
@@ -213,7 +230,7 @@ function WorkContent() {
             {/* Type Filter */}
             <div>
               <h3 className="font-gt-america font-bold text-sm mb-3 pt-2">Type</h3>
-              <div className="divide-y divide-gray-300">
+              <div className="divide-y divide-gray-350">
                 {[
                   { name: 'Architecture' as ProjectType },
                   { name: 'Objects' as ProjectType },
@@ -221,7 +238,7 @@ function WorkContent() {
                 ].map(({ name }) => (
                   <label key={name} className="flex items-center justify-between group cursor-pointer py-1.5 first:pt-0 last:pb-0">
                     <div className="flex items-center gap-2">
-                      <div className={`w-2 h-2 ${getTypeColor(name)}`} />
+                      <div className={`w-2 h-2 ${getTypeColor(name)} ${!filters.type.includes(name) ? 'opacity-50' : ''}`} />
                       <input
                         type="checkbox"
                         checked={filters.type.includes(name)}
@@ -233,7 +250,11 @@ function WorkContent() {
                         }}
                         className="hidden"
                       />
-                      <span className={`font-gt-america text-sm ${filters.type.includes(name) ? 'opacity-100' : 'opacity-30'}`}>
+                      <span className={`font-gt-america text-sm transition-all ${
+                        filters.type.includes(name) 
+                          ? 'opacity-100 hover:text-gray-500' 
+                          : 'text-black/30 hover:text-black hover:opacity-100'
+                      }`}>
                         {name}
                       </span>
                     </div>
@@ -248,7 +269,7 @@ function WorkContent() {
             {/* Role Filter */}
             <div>
               <h3 className="font-gt-america font-bold text-sm mb-3">Role</h3>
-              <div className="divide-y divide-gray-300">
+              <div className="divide-y divide-gray-350">
                 {[
                   { name: 'Design' as ProjectRole },
                   { name: 'Build' as ProjectRole },
@@ -267,7 +288,11 @@ function WorkContent() {
                         }}
                         className="hidden"
                       />
-                      <span className={`font-gt-america text-sm ${filters.role.includes(name) ? 'opacity-100' : 'opacity-30'}`}>
+                      <span className={`font-gt-america text-sm transition-all ${
+                        filters.role.includes(name) 
+                          ? 'opacity-100 hover:text-gray-500' 
+                          : 'text-black/30 hover:text-black hover:opacity-100'
+                      }`}>
                         {name}
                       </span>
                     </div>
@@ -283,27 +308,70 @@ function WorkContent() {
 
         {/* Right Scrollable Project Content */}
         <div className="flex-1 ml-80">
-          <div className="divide-y divide-gray-300">
-            {filteredProjects.map((project) => (
-              <div key={project.id} className="flex items-center py-4 first:pt-0">
-                <div className="w-72">
-                  <Link href={`/work/${project.slug}`} className="group">
-                    <div className="flex items-center gap-2">
-                      <div className="flex gap-1 items-center">
-                        {project.type.map((type) => (
-                          <div key={type} className={`w-2 h-2 ${getTypeColor(type)}`} />
-                        ))}
+          {!isGridView ? (
+            <div className="divide-y divide-gray-350">
+              {filteredProjects.map((project) => (
+                <div key={project.id} className="flex py-4 first:pt-0 items-center">
+                  <div className="w-[21.6rem] flex items-center">
+                    <Link href={`/work/${project.slug}`} className="group">
+                      <div className="flex items-center gap-2">
+                        <div className="flex gap-1 items-center">
+                          {project.type.map((type) => (
+                            <div key={type} className={`w-2 h-2 ${getTypeColor(type)}`} />
+                          ))}
+                        </div>
+                        <span className="font-gt-america text-lg group-hover:underline">{project.name}</span>
                       </div>
-                      <span className="font-gt-america text-lg group-hover:underline">{project.name}</span>
-                    </div>
-                  </Link>
+                    </Link>
+                  </div>
+                  <div className="flex-1 font-gt-america text-sm flex items-center">{project.description_short}</div>
+                  <div className="w-64 font-gt-america text-sm flex items-center">{project.role.join(", ")}</div>
+                  <div className="w-20 text-right font-gt-america-mono text-xs flex items-center justify-end">{project.year}</div>
                 </div>
-                <div className="flex-1 font-gt-america text-sm flex items-center">{project.description_short}</div>
-                <div className="w-40 font-gt-america text-sm flex items-center">{project.role.join(", ")}</div>
-                <div className="w-20 text-right font-gt-america-mono text-xs flex items-center justify-end">{project.year}</div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 lg:grid-cols-2 2xl:grid-cols-3 gap-4">
+              {filteredProjects.map((project) => (
+                <Link key={project.id} href={`/work/${project.slug}`} className="group block relative aspect-[3/2] w-full">
+                  {project.cover.match(/\.(mp4|webm|mov)$/i) ? (
+                    <div className="absolute inset-0">
+                      <VideoPlayer
+                        src={project.cover}
+                        className="!w-full !h-full"
+                        autoplay={true}
+                        hidePlayButton={true}
+                        hideControls={true}
+                      />
+                      <div className="absolute inset-0 bg-black opacity-0 transition-opacity group-hover:opacity-30" />
+                    </div>
+                  ) : (
+                    <>
+                      <Image
+                        src={project.cover}
+                        alt={project.name}
+                        fill
+                        className="object-cover"
+                      />
+                      <div className="absolute inset-0 bg-black opacity-0 transition-opacity group-hover:opacity-30" />
+                    </>
+                  )}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/15 via-transparent to-transparent pointer-events-none" />
+                  <div className="absolute top-4 left-4 flex gap-1">
+                    {project.type.map((type) => (
+                      <div key={type} className={`w-2 h-2 ${getTypeColor(type)}`} />
+                    ))}
+                  </div>
+                  <div className="absolute inset-0 flex items-center justify-center px-8">
+                    <p className="font-gt-america text-sm text-white text-center opacity-0 transition-opacity group-hover:opacity-100">{project.description_short}</p>
+                  </div>
+                  <div className="absolute bottom-4 left-4 right-4">
+                    <h3 className="font-gt-america text-lg text-white group-hover:underline">{project.name}</h3>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
@@ -313,7 +381,7 @@ function WorkContent() {
           <div className="flex">
             {/* Left Footer Line */}
             <div className="w-64 flex-shrink-0">
-              <div className="border-t border-gray-300"></div>
+              <div className="border-t border-gray-350"></div>
             </div>
             
             {/* Vertical Divider Space */}
@@ -321,7 +389,7 @@ function WorkContent() {
             
             {/* Right Footer Line */}
             <div className="flex-1">
-              <div className="border-t border-gray-300"></div>
+              <div className="border-t border-gray-350"></div>
             </div>
           </div>
         </div>
@@ -338,11 +406,15 @@ function WorkContent() {
 }
 
 export default function WorkPage() {
+  useEffect(() => {
+    window.scrollTo(0, 0)
+  }, [])
+
   return (
     <Suspense fallback={
       <div className="w-full px-16">
         <div className="pt-20">
-          <h1 className="font-quadrant text-4xl mb-8">Work</h1>
+          <h1 className="font-quadrant-light text-4xl mb-8">Work</h1>
           <div className="flex">
             <div className="w-64" />
             <div className="flex-1">

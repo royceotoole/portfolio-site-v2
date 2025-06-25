@@ -15,10 +15,17 @@ CREATE TABLE projects (
   description_short TEXT NOT NULL,
   description_long TEXT NOT NULL,
   media TEXT[] NOT NULL,
+  media_settings JSONB[] NOT NULL DEFAULT ARRAY[]::JSONB[], -- Each element can contain: { autoplay: boolean, start: number, end: number }
   cover TEXT NOT NULL,
   importance INTEGER NOT NULL CHECK (importance >= 1 AND importance <= 10),
   created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT prevent_screensaver_deletion CHECK (
+    CASE 
+      WHEN slug = 'screensaver' THEN true
+      ELSE true
+    END
+  )
 );
 
 -- Create function to update updated_at timestamp
@@ -35,6 +42,23 @@ CREATE TRIGGER update_projects_updated_at
   BEFORE UPDATE ON projects
   FOR EACH ROW
   EXECUTE FUNCTION update_updated_at_column();
+
+-- Create function to prevent screensaver deletion
+CREATE OR REPLACE FUNCTION prevent_screensaver_deletion()
+RETURNS TRIGGER AS $$
+BEGIN
+  IF OLD.slug = 'screensaver' THEN
+    RAISE EXCEPTION 'Cannot delete the screensaver project';
+  END IF;
+  RETURN OLD;
+END;
+$$ language 'plpgsql';
+
+-- Create trigger to prevent screensaver deletion
+CREATE TRIGGER prevent_screensaver_deletion_trigger
+  BEFORE DELETE ON projects
+  FOR EACH ROW
+  EXECUTE FUNCTION prevent_screensaver_deletion();
 
 -- Create RLS policies
 ALTER TABLE projects ENABLE ROW LEVEL SECURITY;
@@ -54,6 +78,11 @@ CREATE POLICY "Allow authenticated update"
   USING (auth.role() = 'authenticated')
   WITH CHECK (auth.role() = 'authenticated');
 
+-- Allow authenticated users to delete (except screensaver)
+CREATE POLICY "Allow authenticated delete"
+  ON projects FOR DELETE
+  USING (auth.role() = 'authenticated' AND slug != 'screensaver');
+
 -- Create sample screensaver project
 INSERT INTO projects (
   slug,
@@ -65,6 +94,7 @@ INSERT INTO projects (
   description_short,
   description_long,
   media,
+  media_settings,
   cover,
   importance
 ) VALUES (
@@ -79,6 +109,10 @@ INSERT INTO projects (
   ARRAY[
     'https://example.com/image1.jpg',
     'https://example.com/image2.jpg'
+  ],
+  ARRAY[
+    '{"autoplay": true}'::jsonb,
+    '{"autoplay": true}'::jsonb
   ],
   'https://example.com/cover.jpg',
   1

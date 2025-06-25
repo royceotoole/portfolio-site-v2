@@ -7,6 +7,12 @@ module.exports = {
   ],
   theme: {
     extend: {
+      colors: {
+        'gray-350': 'rgb(182, 188, 197)',
+        'architecture': '#B9BE16',
+        'objects': '#BBB1E9',
+        'visual': '#F4411A',
+      },
       fontFamily: {
         'gt-america': ['GT-America', 'sans-serif'],
         'gt-america-mono': ['GT-America-Mono', 'monospace'],
@@ -15,11 +21,6 @@ module.exports = {
       maxWidth: {
         'screen-2xl': '1536px',
       },
-      colors: {
-        'architecture': '#B9BE16',
-        'objects': '#BBB1E9',
-        'visual': '#F4411A',
-      }
     },
   },
   plugins: [],
@@ -61,10 +62,10 @@ module.exports = {
     'border-t',
     'border-b',
     'border-l',
-    'border-gray-300',
+    'border-gray-350',
     'border-gray-200',
     'divide-y',
-    'divide-gray-300',
+    'divide-gray-350',
     
     // Layout
     'fixed',
