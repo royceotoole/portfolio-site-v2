@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import { supabase } from '@/lib/supabase'
+import { supabase } from '../lib/supabase'
 import VideoPlayer from './VideoPlayer'
 
 interface ScreensaverProps {
