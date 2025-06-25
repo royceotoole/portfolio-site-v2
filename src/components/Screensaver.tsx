@@ -16,6 +16,27 @@ interface MediaSettings {
   autoplay?: boolean
 }
 
+// Fisher-Yates shuffle algorithm that keeps two arrays in sync
+function shuffleArrays(media: string[], settings: MediaSettings[]): [string[], MediaSettings[]] {
+  const length = media.length
+  const shuffledMedia = [...media]
+  const shuffledSettings = [...settings]
+  
+  for (let i = length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1))
+    // Swap media
+    const tempMedia = shuffledMedia[i]
+    shuffledMedia[i] = shuffledMedia[j]
+    shuffledMedia[j] = tempMedia
+    // Swap settings
+    const tempSettings = shuffledSettings[i]
+    shuffledSettings[i] = shuffledSettings[j]
+    shuffledSettings[j] = tempSettings
+  }
+  
+  return [shuffledMedia, shuffledSettings]
+}
+
 export default function Screensaver({ onExit, disableInteraction }: ScreensaverProps) {
   const [images, setImages] = useState<string[]>([])
   const [mediaSettings, setMediaSettings] = useState<MediaSettings[]>([])
@@ -28,23 +49,37 @@ export default function Screensaver({ onExit, disableInteraction }: ScreensaverP
   useEffect(() => {
     const fetchMedia = async () => {
       try {
-        const { data: projects } = await supabase
+        // Get the exact project named "Screensaver"
+        const { data: project, error } = await supabase
           .from('projects')
-          .select('media, media_settings')
-          .not('media', 'eq', '{}')
+          .select('*')
+          .eq('name', 'Screensaver')
+          .single()
 
-        if (!projects) return
+        if (error) {
+          console.error('Supabase error:', error)
+          setIsLoading(false)
+          return
+        }
 
-        const allMedia = projects.flatMap(project => project.media)
-        const allSettings = projects.flatMap((project) => 
-          project.media.map((_: string, mediaIndex: number) => project.media_settings?.[mediaIndex] || {})
-        )
+        if (!project || !project.media?.length) {
+          console.log('No screensaver media found')
+          setIsLoading(false)
+          return
+        }
 
-        setImages(allMedia)
-        setMediaSettings(allSettings)
+        // Create empty settings array if none exists
+        const settings = project.media_settings || Array(project.media.length).fill({})
+
+        // Shuffle both arrays while keeping them aligned
+        const [shuffledMedia, shuffledSettings] = shuffleArrays(project.media, settings)
+
+        setImages(shuffledMedia)
+        setMediaSettings(shuffledSettings)
         setIsLoading(false)
       } catch (error) {
         console.error('Error fetching media:', error)
+        setIsLoading(false)
       }
     }
 
@@ -87,6 +122,11 @@ export default function Screensaver({ onExit, disableInteraction }: ScreensaverP
         <div className="w-8 h-8 border-4 border-white/20 border-t-white rounded-full animate-spin" />
       </div>
     )
+  }
+
+  if (images.length === 0) {
+    router.push('/work')
+    return null
   }
 
   return (
