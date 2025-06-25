@@ -167,7 +167,7 @@ export default function ProjectContent({ project }: { project: Project }) {
               </button>
               <button 
                 onClick={scrollToNext}
-                className="absolute right-12 top-1/2 -translate-y-1/2 z-20 bg-white/80 hover:bg-white rounded-full p-2 shadow-lg transition-all"
+                className="absolute right-0 top-1/2 -translate-y-1/2 z-20 bg-white/80 hover:bg-white rounded-full p-2 shadow-lg transition-all"
                 aria-label="Next photo"
               >
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
