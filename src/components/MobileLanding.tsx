@@ -12,7 +12,7 @@ export default function MobileLanding() {
     <>
       {/* Background Screensaver */}
       <div className="pointer-events-none">
-        <Screensaver disableInteraction excludeVideos />
+        <Screensaver disableInteraction />
       </div>
 
       {/* Mobile Content Overlay */}
