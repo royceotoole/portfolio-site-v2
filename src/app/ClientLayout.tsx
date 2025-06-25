@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { isMobile } from '@/utils/isMobile'
+import { isMobile } from '../utils/isMobile'
 
 export default function ClientLayout({
   children,
