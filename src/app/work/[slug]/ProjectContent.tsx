@@ -153,7 +153,7 @@ export default function ProjectContent({ project }: { project: Project }) {
 
         {/* Right Scrollable Photos Content */}
         <div className="flex-1 ml-80">
-          <div className="fixed inset-0 top-[226px] bottom-[80px] left-[352px] right-24">
+          <div className="fixed inset-0 top-[226px] bottom-[68px] left-[352px] right-24">
             <div className="relative w-full h-full mt-10">
               {/* Navigation Arrows */}
               <button 
@@ -178,7 +178,7 @@ export default function ProjectContent({ project }: { project: Project }) {
               {/* Horizontal Scrolling Container */}
               <div 
                 ref={scrollContainerRef}
-                className="flex overflow-x-auto overflow-y-hidden w-full h-full ml-8 pt-6 pb-20 lg:pb-8 scroll-smooth"
+                className="flex overflow-x-auto overflow-y-hidden w-full h-full ml-8 pt-6 pb-24 lg:pb-12 scroll-smooth"
                 style={{ scrollBehavior: 'smooth' }}
               >
                 {project.media.map((media, index) => {
