@@ -5,9 +5,9 @@ import { useSearchParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
 import { motion, AnimatePresence } from 'framer-motion'
-import { supabase } from '../../lib/supabase'
-import type { Project, ProjectType, ProjectRole } from '../../lib/supabase'
-import VideoPlayer from '../../components/VideoPlayer'
+import { supabase } from '@/lib/supabase'
+import type { Project, ProjectType, ProjectRole } from '@/lib/supabase'
+import VideoPlayer from '@/components/VideoPlayer'
 
 interface Filters {
   type: ProjectType[]

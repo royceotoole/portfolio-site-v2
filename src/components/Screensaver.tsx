@@ -1,20 +1,11 @@
 'use client'
 
-import { useEffect, useState, useRef } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import { supabase } from '../lib/supabase'
-import VideoPlayer from './VideoPlayer'
-
-interface ScreensaverProps {
-  onExit?: () => void
-  disableInteraction?: boolean
-}
-
-interface MediaSettings {
-  start?: number
-  end?: number
-  autoplay?: boolean
-}
+import Image from 'next/image'
+import { supabase } from '@/lib/supabase'
+import type { MediaSettings } from '@/lib/supabase'
+import VideoPlayer from '@/components/VideoPlayer'
 
 // Fisher-Yates shuffle algorithm that keeps two arrays in sync
 function shuffleArrays(media: string[], settings: MediaSettings[]): [string[], MediaSettings[]] {
@@ -37,83 +28,141 @@ function shuffleArrays(media: string[], settings: MediaSettings[]): [string[], M
   return [shuffledMedia, shuffledSettings]
 }
 
+interface ScreensaverProps {
+  onExit?: () => void
+  disableInteraction?: boolean
+}
+
 export default function Screensaver({ onExit, disableInteraction }: ScreensaverProps) {
   const [images, setImages] = useState<string[]>([])
   const [mediaSettings, setMediaSettings] = useState<MediaSettings[]>([])
   const [currentIndex, setCurrentIndex] = useState(0)
+  const [nextIndex, setNextIndex] = useState<number | null>(null)
   const [isLoading, setIsLoading] = useState(true)
-  const nextVideoRef = useRef<HTMLVideoElement>(null)
+  const [isVideoEnded, setIsVideoEnded] = useState(false)
   const router = useRouter()
+  const intervalRef = useRef<NodeJS.Timeout>()
+  const imageCache = useRef<HTMLImageElement[]>([])
+  const nextVideoRef = useRef<HTMLVideoElement | null>(null)
 
-  // Fetch media on mount
   useEffect(() => {
-    const fetchMedia = async () => {
-      try {
-        // Get the exact project named "Screensaver"
-        const { data: project, error } = await supabase
-          .from('projects')
-          .select('*')
-          .eq('name', 'Screensaver')
-          .single()
+    console.log('Screensaver component mounted')
+    loadScreensaverImages()
 
-        if (error) {
-          console.error('Supabase error:', error)
-          setIsLoading(false)
-          return
-        }
-
-        if (!project || !project.media?.length) {
-          console.log('No screensaver media found')
-          setIsLoading(false)
-          return
-        }
-
-        // Create empty settings array if none exists
-        const settings = project.media_settings || Array(project.media.length).fill({})
-
-        // Shuffle both arrays while keeping them aligned
-        const [shuffledMedia, shuffledSettings] = shuffleArrays(project.media, settings)
-
-        setImages(shuffledMedia)
-        setMediaSettings(shuffledSettings)
-        setIsLoading(false)
-      } catch (error) {
-        console.error('Error fetching media:', error)
-        setIsLoading(false)
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current)
       }
     }
-
-    fetchMedia()
   }, [])
 
-  // Handle media rotation
+  // Preload images when the images array changes
+  useEffect(() => {
+    // Clear existing cache
+    imageCache.current = []
+    
+    // Preload all images
+    images.forEach((url) => {
+      if (!isVideoUrl(url)) {
+        const img = document.createElement('img')
+        img.src = url
+        imageCache.current.push(img)
+      }
+    })
+  }, [images])
+
   useEffect(() => {
     if (images.length === 0) return
 
-    const interval = setInterval(() => {
-      setCurrentIndex(prevIndex => (prevIndex + 1) % images.length)
-    }, 1500)
+    // Calculate next index
+    const next = (currentIndex + 1) % images.length
+    setNextIndex(next)
 
-    return () => clearInterval(interval)
-  }, [images])
+    // Clear any existing interval
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current)
+    }
 
-  const currentUrl = images[currentIndex]
-  const currentSettings = mediaSettings[currentIndex] || {}
-  const isVideo = currentUrl?.match(/\.(mp4|webm|mov)$/i) !== null
+    const currentUrl = images[currentIndex]
+    const isVideo = isVideoUrl(currentUrl)
 
-  const nextIndex = (currentIndex + 1) % images.length
-  const nextUrl = images[nextIndex]
-  const nextSettings = mediaSettings[nextIndex] || {}
-  const isNextVideo = nextUrl?.match(/\.(mp4|webm|mov)$/i) !== null
+    if (!isVideo) {
+      // For images, change every 1.5 seconds
+      intervalRef.current = setInterval(() => {
+        setCurrentIndex(next)
+      }, 1500)
+    }
+
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current)
+      }
+    }
+  }, [images, currentIndex, isVideoEnded])
 
   const handleVideoEnd = () => {
-    setCurrentIndex(nextIndex)
+    console.log('Video ended')
+    setIsVideoEnded(true)
+    setCurrentIndex((prevIndex) => (prevIndex + 1) % images.length)
+  }
+
+  const loadScreensaverImages = async () => {
+    console.log('Starting to load screensaver images...')
+    try {
+      // Get the exact project named "Screensaver"
+      const { data: project, error } = await supabase
+        .from('projects')
+        .select('*')
+        .eq('name', 'Screensaver')
+        .single()
+
+      console.log('Full project data:', project)
+      console.log('Error if any:', error)
+
+      if (error) {
+        console.error('Supabase error:', error)
+        setIsLoading(false)
+        return
+      }
+
+      if (!project) {
+        console.log('No project found with name "Screensaver"')
+        setIsLoading(false)
+        return
+      }
+
+      if (!project.media?.length) {
+        console.log('Project found but no media:', project)
+        setIsLoading(false)
+        return
+      }
+
+      // Create empty settings array if none exists
+      const settings = project.media_settings || Array(project.media.length).fill({})
+
+      // Shuffle both arrays while keeping them aligned
+      const [shuffledMedia, shuffledSettings] = shuffleArrays(project.media, settings)
+
+      console.log('Setting shuffled media:', shuffledMedia)
+      console.log('Setting shuffled media settings:', shuffledSettings)
+      
+      setImages(shuffledMedia)
+      setMediaSettings(shuffledSettings)
+      setIsLoading(false)
+    } catch (err) {
+      console.error('Unexpected error:', err)
+      setIsLoading(false)
+    }
   }
 
   const handleClick = () => {
     if (disableInteraction) return
     onExit?.()
     router.push('/work')
+  }
+
+  const isVideoUrl = (url: string) => {
+    return url?.match(/\.(mp4|webm|mov)$/i) !== null
   }
 
   if (isLoading) {
@@ -125,9 +174,17 @@ export default function Screensaver({ onExit, disableInteraction }: ScreensaverP
   }
 
   if (images.length === 0) {
+    console.log('No images found, redirecting to /work')
     router.push('/work')
     return null
   }
+
+  const currentUrl = images[currentIndex]
+  const nextUrl = nextIndex !== null ? images[nextIndex] : null
+  const currentSettings = mediaSettings[currentIndex] || {}
+  const nextSettings = nextIndex !== null ? mediaSettings[nextIndex] || {} : null
+  const isVideo = isVideoUrl(currentUrl)
+  const isNextVideo = nextUrl ? isVideoUrl(nextUrl) : false
 
   return (
     <div 
@@ -166,7 +223,7 @@ export default function Screensaver({ onExit, disableInteraction }: ScreensaverP
         )}
       </div>
 
-      {/* Preload next image/video */}
+      {/* Preload next video if it exists and is a video */}
       {isNextVideo && nextUrl && nextSettings && (
         <div className="hidden">
           <video

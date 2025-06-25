@@ -3,10 +3,10 @@
 import { useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import dynamic from 'next/dynamic'
-import { isMobile } from '../utils/isMobile'
+import { isMobile } from '@/utils/isMobile'
 
 // Dynamically import the Screensaver component to avoid hydration issues
-const Screensaver = dynamic(() => import('../components/Screensaver'), {
+const Screensaver = dynamic(() => import('@/components/Screensaver'), {
   ssr: false,
   loading: () => (
     <div className="fixed inset-0 bg-black flex items-center justify-center">
@@ -15,7 +15,7 @@ const Screensaver = dynamic(() => import('../components/Screensaver'), {
   )
 })
 
-const MobileLanding = dynamic(() => import('../components/MobileLanding'), {
+const MobileLanding = dynamic(() => import('@/components/MobileLanding'), {
   ssr: false
 })
 
