@@ -3,12 +3,6 @@
 @tailwind utilities;
 
 @layer base {
-  :root {
-    --font-gt-america: 'GT America', system-ui, sans-serif;
-    --font-gt-america-mono: 'GT America Mono', ui-monospace, monospace;
-    --font-quadrant: 'QuadrantText-201218-Light', ui-serif, serif;
-  }
-
   /* Remove default link styling */
   a {
     color: inherit;

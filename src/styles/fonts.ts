@@ -16,6 +16,7 @@ export const gtAmerica = localFont({
   variable: '--font-gt-america',
   preload: true,
   display: 'swap',
+  adjustFontFallback: false,
 })
 
 export const gtAmericaMono = localFont({
@@ -29,6 +30,7 @@ export const gtAmericaMono = localFont({
   variable: '--font-gt-america-mono',
   preload: true,
   display: 'swap',
+  adjustFontFallback: false,
 })
 
 export const quadrant = localFont({
@@ -42,4 +44,5 @@ export const quadrant = localFont({
   variable: '--font-quadrant',
   preload: true,
   display: 'swap',
+  adjustFontFallback: false,
 }) 

@@ -8,9 +8,9 @@ module.exports = {
   theme: {
     extend: {
       fontFamily: {
-        'gt-america': ['GT-America', 'sans-serif'],
-        'gt-america-mono': ['GT-America-Mono', 'monospace'],
-        'quadrant': ['Quadrant', 'serif'],
+        'gt-america': ['var(--font-gt-america)', 'system-ui', 'sans-serif'],
+        'gt-america-mono': ['var(--font-gt-america-mono)', 'ui-monospace', 'monospace'],
+        'quadrant': ['var(--font-quadrant)', 'ui-serif', 'serif'],
       },
       maxWidth: {
         'screen-2xl': '1536px',
