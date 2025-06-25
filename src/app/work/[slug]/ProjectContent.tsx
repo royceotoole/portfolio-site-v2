@@ -154,11 +154,11 @@ export default function ProjectContent({ project }: { project: Project }) {
         {/* Right Scrollable Photos Content */}
         <div className="flex-1 ml-80">
           <div className="fixed inset-0 top-[226px] bottom-[68px] left-[352px] right-24">
-            <div className="relative w-full h-full mt-10">
+            <div className="relative w-full h-full">
               {/* Navigation Arrows */}
               <button 
                 onClick={scrollToPrevious}
-                className="absolute left-[64px] top-1/2 -translate-y-1/2 z-20 bg-white/80 hover:bg-white rounded-full p-2 shadow-lg transition-all"
+                className="absolute left-[64px] top-[calc((100%-100px)/2)] -translate-y-1/2 z-20 bg-white/80 hover:bg-white rounded-full p-2 shadow-lg transition-all"
                 aria-label="Previous photo"
               >
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -167,7 +167,7 @@ export default function ProjectContent({ project }: { project: Project }) {
               </button>
               <button 
                 onClick={scrollToNext}
-                className="absolute right-0 top-1/2 -translate-y-1/2 z-20 bg-white/80 hover:bg-white rounded-full p-2 shadow-lg transition-all"
+                className="absolute right-0 top-[calc((100%-100px)/2)] -translate-y-1/2 z-20 bg-white/80 hover:bg-white rounded-full p-2 shadow-lg transition-all"
                 aria-label="Next photo"
               >
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -178,8 +178,8 @@ export default function ProjectContent({ project }: { project: Project }) {
               {/* Horizontal Scrolling Container */}
               <div 
                 ref={scrollContainerRef}
-                className="flex overflow-x-auto overflow-y-hidden w-full h-full ml-8 pt-10 pb-10 scroll-smooth"
-                style={{ scrollBehavior: 'smooth' }}
+                className="flex overflow-x-auto overflow-y-hidden w-full h-full ml-8 scroll-smooth [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+                style={{ marginTop: '72px', paddingBottom: '100px', scrollBehavior: 'smooth' }}
               >
                 {project.media.map((media, index) => {
                   const isVideo = media.match(/\.(mp4|webm|mov)$/i)

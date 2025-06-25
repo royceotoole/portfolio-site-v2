@@ -331,7 +331,7 @@ function WorkContent() {
               ))}
             </div>
           ) : (
-            <div className="grid grid-cols-1 lg:grid-cols-2 2xl:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 lg:grid-cols-2 2xl:grid-cols-3 gap-4" style={{ marginTop: '8px' }}>
               {filteredProjects.map((project) => (
                 <Link key={project.id} href={`/work/${project.slug}`} className="group block relative aspect-[3/2] w-full">
                   {project.cover.match(/\.(mp4|webm|mov)$/i) ? (
