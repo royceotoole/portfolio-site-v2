@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { supabase } from '@/lib/supabase'
@@ -100,45 +100,11 @@ export default function Screensaver({ onExit, disableInteraction }: ScreensaverP
     }
   }, [images, currentIndex, isVideoEnded])
 
-  const handleVideoEnd = useCallback(() => {
-    if (disableInteraction) return // Don't handle video events on mobile
+  const handleVideoEnd = () => {
+    console.log('Video ended')
+    setIsVideoEnded(true)
     setCurrentIndex((prevIndex) => (prevIndex + 1) % images.length)
-  }, [images.length, disableInteraction])
-
-  useEffect(() => {
-    if (images.length === 0) return
-
-    const timer = setInterval(() => {
-      if (isVideoUrl(images[currentIndex]) && !disableInteraction) return // Don't auto-advance during video playback on desktop
-      setCurrentIndex((prevIndex) => {
-        let nextIndex = (prevIndex + 1) % images.length
-        // On mobile, skip videos by finding next image
-        if (disableInteraction) {
-          while (images[nextIndex]?.endsWith('.mp4')) {
-            nextIndex = (nextIndex + 1) % images.length
-          }
-        }
-        return nextIndex
-      })
-    }, 1500)
-
-    return () => clearInterval(timer)
-  }, [images, currentIndex, disableInteraction])
-
-  useEffect(() => {
-    if (images.length === 0) return
-    
-    // On mobile, ensure we start with an image
-    if (disableInteraction) {
-      let safeIndex = 0
-      while (images[safeIndex]?.endsWith('.mp4')) {
-        safeIndex = (safeIndex + 1) % images.length
-      }
-      setCurrentIndex(safeIndex)
-    } else {
-      setCurrentIndex(0)
-    }
-  }, [images, disableInteraction])
+  }
 
   const loadScreensaverImages = async () => {
     console.log('Starting to load screensaver images...')
