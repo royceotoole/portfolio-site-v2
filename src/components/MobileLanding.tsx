@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import dynamic from 'next/dynamic'
 
-const Screensaver = dynamic(() => import('@/components/Screensaver'), {
+const Screensaver = dynamic(() => import('./Screensaver'), {
   ssr: false
 })
 

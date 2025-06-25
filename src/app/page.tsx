@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import dynamic from 'next/dynamic'
+import { isMobile } from '../utils/isMobile'
 
 // Dynamically import the Screensaver component to avoid hydration issues
 const Screensaver = dynamic(() => import('@/components/Screensaver'), {
@@ -14,12 +15,26 @@ const Screensaver = dynamic(() => import('@/components/Screensaver'), {
   )
 })
 
+const MobileLanding = dynamic(() => import('../components/MobileLanding'), {
+  ssr: false
+})
+
 export default function Home() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [hasInteracted, setHasInteracted] = useState(false)
+  const [isMobileView, setIsMobileView] = useState(false)
 
   useEffect(() => {
+    setIsMobileView(isMobile())
+    const handleResize = () => setIsMobileView(isMobile())
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
+
+  useEffect(() => {
+    if (isMobileView) return // Don't add interaction handlers on mobile
+
     // Check if there are any filter parameters
     const filters = {
       type: searchParams?.get('type'),
@@ -52,7 +67,11 @@ export default function Home() {
       window.removeEventListener('keydown', handleInteraction)
       window.removeEventListener('touchstart', handleInteraction)
     }
-  }, [router, searchParams, hasInteracted])
+  }, [router, searchParams, hasInteracted, isMobileView])
+
+  if (isMobileView) {
+    return <MobileLanding />
+  }
 
   return <Screensaver onExit={() => setHasInteracted(true)} />
 } 
