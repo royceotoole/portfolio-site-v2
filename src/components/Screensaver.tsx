@@ -1,36 +1,19 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import Image from 'next/image'
 import { supabase } from '@/lib/supabase'
-import type { MediaSettings } from '@/lib/supabase'
-import VideoPlayer from '@/components/VideoPlayer'
-
-// Fisher-Yates shuffle algorithm that keeps two arrays in sync
-function shuffleArrays(media: string[], settings: MediaSettings[]): [string[], MediaSettings[]] {
-  const length = media.length
-  const shuffledMedia = [...media]
-  const shuffledSettings = [...settings]
-  
-  for (let i = length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1))
-    // Swap media
-    const tempMedia = shuffledMedia[i]
-    shuffledMedia[i] = shuffledMedia[j]
-    shuffledMedia[j] = tempMedia
-    // Swap settings
-    const tempSettings = shuffledSettings[i]
-    shuffledSettings[i] = shuffledSettings[j]
-    shuffledSettings[j] = tempSettings
-  }
-  
-  return [shuffledMedia, shuffledSettings]
-}
+import VideoPlayer from './VideoPlayer'
 
 interface ScreensaverProps {
   onExit?: () => void
   disableInteraction?: boolean
+}
+
+interface MediaSettings {
+  start?: number
+  end?: number
+  autoplay?: boolean
 }
 
 export default function Screensaver({ onExit, disableInteraction }: ScreensaverProps) {
@@ -39,8 +22,6 @@ export default function Screensaver({ onExit, disableInteraction }: ScreensaverP
   const [currentIndex, setCurrentIndex] = useState(0)
   const [isLoading, setIsLoading] = useState(true)
   const nextVideoRef = useRef<HTMLVideoElement>(null)
-  const [mobileImages, setMobileImages] = useState<string[]>([])
-  const [mobileIndex, setMobileIndex] = useState(0)
   const router = useRouter()
 
   // Fetch media on mount
@@ -61,11 +42,6 @@ export default function Screensaver({ onExit, disableInteraction }: ScreensaverP
 
         setImages(allMedia)
         setMediaSettings(allSettings)
-
-        // Set up mobile images (no videos)
-        const imageOnlyUrls = allMedia.filter(url => !url.match(/\.(mp4|webm|mov)$/i))
-        setMobileImages(imageOnlyUrls)
-
         setIsLoading(false)
       } catch (error) {
         console.error('Error fetching media:', error)
@@ -75,29 +51,18 @@ export default function Screensaver({ onExit, disableInteraction }: ScreensaverP
     fetchMedia()
   }, [])
 
-  // Mobile-specific image rotation
+  // Handle media rotation
   useEffect(() => {
-    if (!disableInteraction || mobileImages.length === 0) return
-
-    const interval = setInterval(() => {
-      setMobileIndex(prevIndex => (prevIndex + 1) % mobileImages.length)
-    }, 5000)
-
-    return () => clearInterval(interval)
-  }, [disableInteraction, mobileImages])
-
-  // Desktop video/image handling
-  useEffect(() => {
-    if (disableInteraction || images.length === 0) return
+    if (images.length === 0) return
 
     const interval = setInterval(() => {
       setCurrentIndex(prevIndex => (prevIndex + 1) % images.length)
-    }, 5000)
+    }, 1500)
 
     return () => clearInterval(interval)
-  }, [disableInteraction, images])
+  }, [images])
 
-  const currentUrl = disableInteraction ? mobileImages[mobileIndex] : images[currentIndex]
+  const currentUrl = images[currentIndex]
   const currentSettings = mediaSettings[currentIndex] || {}
   const isVideo = currentUrl?.match(/\.(mp4|webm|mov)$/i) !== null
 
@@ -107,7 +72,6 @@ export default function Screensaver({ onExit, disableInteraction }: ScreensaverP
   const isNextVideo = nextUrl?.match(/\.(mp4|webm|mov)$/i) !== null
 
   const handleVideoEnd = () => {
-    if (disableInteraction) return
     setCurrentIndex(nextIndex)
   }
 
@@ -132,7 +96,7 @@ export default function Screensaver({ onExit, disableInteraction }: ScreensaverP
     >
       {/* Current media item */}
       <div className="absolute inset-0" style={{ backfaceVisibility: 'hidden', transform: 'translate3d(0,0,0)' }}>
-        {isVideo && !disableInteraction ? (
+        {isVideo ? (
           <VideoPlayer
             key={`${currentUrl}-${currentSettings.start}-${currentSettings.end}`}
             src={currentUrl}
@@ -156,15 +120,14 @@ export default function Screensaver({ onExit, disableInteraction }: ScreensaverP
               backfaceVisibility: 'hidden',
               transform: 'translate3d(0,0,0)',
               WebkitBackfaceVisibility: 'hidden',
-              WebkitTransform: 'translate3d(0,0,0)',
-              transition: disableInteraction ? 'opacity 1s ease-in-out' : 'none'
+              WebkitTransform: 'translate3d(0,0,0)'
             }}
           />
         )}
       </div>
 
       {/* Preload next image/video */}
-      {!disableInteraction && isNextVideo && nextUrl && nextSettings && (
+      {isNextVideo && nextUrl && nextSettings && (
         <div className="hidden">
           <video
             ref={nextVideoRef}
